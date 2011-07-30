@@ -4,6 +4,10 @@
  * Purpose
  *	A fixed point (31.32 bit) math library.
  *
+ * Reference
+ *	ftp://ftp.slackware.com/pub/netwinder/devteam/andrewm/math/math-sll.c
+ *	http://svn.csie.net/filedetails.php?repname=picogl&path=%2FPicoGL%2Finclude%2FGL%2Finternal%2Fmath-sll.h
+ *
  * Description
  *	Floating point packs the most accuracy in the available bits, but it
  *	often provides more accuracy than is required.  It is time consuming to
@@ -214,9 +218,58 @@ typedef double ull;
 
 #define sllvalue(X)     ((double)X)
 #define int2sll(X)	((sll)(X))
-#define sll2int(X)	((int)(X))
+#define sll2int(X)	((long long)(X))
 #define sll_abs(X)	(fabs(X))
 #define sllneg(X)       (-(X))
+
+#define	sllint		sll2int
+#define	sllatan		atan
+#define	sllatan2	atan2
+#define	slllog		log
+#define	sllexp		exp
+
+#define CONST_0		0.f
+#define CONST_1		1.f
+#define CONST_2		2.f
+#define CONST_3		3.f
+#define CONST_4		4.f
+#define CONST_10	10.f
+#define CONST_1_2	(1/2.f)
+#define CONST_1_3	(1/3.f)
+#define CONST_1_4	(1/4.f)
+#define CONST_1_5	(1/5.f)
+#define CONST_1_6	(1/6.f)
+#define CONST_1_7	(1/7.f)
+#define CONST_1_8	(1/8.f)
+#define CONST_1_9	(1/9.f)
+#define CONST_1_10	(1/10.f)
+#define CONST_1_11	(1/11.f)
+#define CONST_1_12	(1/12.f)
+#define CONST_1_20	(1/20.f)
+#define CONST_1_30	(1/30.f)
+#define CONST_1_42	(1/42.f)
+#define CONST_1_56	(1/56.f)
+#define CONST_1_72	(1/72.f)
+#define CONST_1_90	(1/90.f)
+#define CONST_1_110	(1/110.f)
+#define CONST_1_132	(1/132.f)
+#define CONST_1_156	(1/156.f)
+#define CONST_E		M_E
+#define CONST_1_E	(1/CONST_E)
+#define CONST_SQRTE	sqrt(M_E)
+#define CONST_1_SQRTE	(1/CONST_SQRTE)
+#define CONST_LOG2_E	M_LOG2E
+#define CONST_LOG10_E	M_LOG10E
+#define CONST_LN2	M_LN2
+#define CONST_LN10	M_LN10
+#define CONST_PI	M_PI
+#define CONST_PI_2	M_PI_2
+#define CONST_PI_4	M_PI_4
+#define CONST_1_PI	M_1_PI
+#define CONST_2_PI	M_2_PI
+#define CONST_2_SQRTPI	M_2_SQRTPI
+#define CONST_SQRT2	M_SQRT2
+#define CONST_1_SQRT2	(1/M_SQRT2)
 
 
 static __inline__ double sll2dbl(sll x)
@@ -438,6 +491,9 @@ static __inline__ sll sllmul(sll left, sll right)
 	register sll retval;
 	__asm__(
 		"# sllmul\n\t"
+#ifdef	PIC 	// FIXME:
+		"	push	%%ebx\n\t"
+#endif// comment by mhfan
 		"	movl	%1, %%eax\n\t"
 		"	mull 	%3\n\t"
 		"	movl	%%edx, %%ebx\n\t"
@@ -455,6 +511,9 @@ static __inline__ sll sllmul(sll left, sll right)
 		"	mull	%3\n\t"
 		"	addl	%%ebx, %%eax\n\t"
 		"	adcl	%%ecx, %%edx\n\t"
+#ifdef	PIC 	// FIXME:
+		"	pop	%%ebx\n\t"
+#endif// comment by mhfan
 		"\n\t"
 		"	btl	$31, %2\n\t"
 		"	jnc	1f\n\t"
@@ -466,7 +525,11 @@ static __inline__ sll sllmul(sll left, sll right)
 		: "=&A" (retval)
 		: "m" (left), "m" (((unsigned *) &left)[1]),
 		  "m" (right), "m" (((unsigned *) &right)[1])
+#ifndef	PIC 	// FIXME:
 		: "ebx", "ecx", "cc"
+#else
+		: "ecx", "cc"
+#endif// comment by mhfan
 	);
 	return retval;
 }
@@ -604,8 +667,8 @@ static __inline__ sll dbl2sll(double dbl)
 	union {
 		double d;
 		unsigned u[2];
-		ull ull;
-		sll sll;
+		ull ul_;
+		sll sl_;
 	} in, retval;
 	register unsigned exp;
 
@@ -632,15 +695,15 @@ static __inline__ sll dbl2sll(double dbl)
 	/* Extract the exponent and align the decimals */
 	exp = (in.u[1] >> 20) & 0x7ff;
 	if (exp)
-		retval.ull >>= 1053 - exp;
+		retval.ul_ >>= 1053 - exp;
 	else
 		return 0L;
 
 	/* Negate if negative flag set */
 	if (in.u[1] & 0x80000000)
-		retval.sll = -retval.sll;
+		retval.sl_ = -retval.sl_;
 
-	return retval.sll;
+	return retval.sl_;
 }
 
 static __inline__ sll float2sll(float f)
@@ -653,8 +716,8 @@ static __inline__ double sll2dbl(sll s)
 	union {
 		double d;
 		unsigned u[2];
-		ull ull;
-		sll sll;
+		ull ul_;
+		sll sl_;
 	} in, retval;
 	register unsigned exp;
 	register unsigned flag;
@@ -663,23 +726,23 @@ static __inline__ double sll2dbl(sll s)
 		return 0.0;
 
 	/* Move into memory as args might be passed in regs */
-	in.sll = s;
+	in.sl_ = s;
 
 	/* Handle the negative flag */
-	if (in.sll < 1) {
+	if (in.sl_ < 1) {
 		flag = 0x80000000;
-		in.ull = sllneg(in.sll);
+		in.ul_ = sllneg(in.sl_);
 	} else
 		flag = 0x00000000;
 
 	/* Normalize */
-	for (exp = 1053; in.ull && (in.u[1] & 0x80000000) == 0; exp--) {
-		in.ull <<= 1;
+	for (exp = 1053; in.ul_ && (in.u[1] & 0x80000000) == 0; exp--) {
+		in.ul_ <<= 1;
 	}
-	in.ull <<= 1;
+	in.ul_ <<= 1;
 	exp++;
-	in.ull >>= 12;
-	retval.ull = in.ull;
+	in.ul_ >>= 12;
+	retval.ul_ = in.ul_;
 	retval.u[1] |= flag | (exp << 20);
 
 #if defined(__arm__)
@@ -909,6 +972,11 @@ static __inline__ sll sllatan(sll x)
 	return _sllsub(retval, _sllatan(sllinv(x)));
 }
 
+static __inline__ sll sllatan2(sll y, sll x)
+{
+    sll a = sllatan(slldiv(y, x)) + (x < 0) * (y < 0 ? -1 : 1) * CONST_PI;
+}
+
 /*
  * Calculate e^x where -0.5 <= x <= 0.5
  *
@@ -1081,6 +1149,27 @@ static __inline__ sll sllsqrt(sll x)
 	return sllmul(n, xn);
 }
 
+#if 1 	// XXX:
+#define isqrt_step(shift) \
+    if ((0x40000000l >> shift) + root <= value) {       \
+        value -= (0x40000000l >> shift) + root;         \
+        root = (root >> 1) | (0x40000000l >> shift);    \
+    } else root >>= 1;
+
+long isqrt(long value)
+{
+    long root = 0;
+
+    isqrt_step( 0);	isqrt_step( 2);	    isqrt_step( 4);	isqrt_step( 6);
+    isqrt_step( 8);	isqrt_step(10);	    isqrt_step(12);	isqrt_step(14);
+    isqrt_step(16);	isqrt_step(18);	    isqrt_step(20);	isqrt_step(22);
+    isqrt_step(24);	isqrt_step(26);	    isqrt_step(28);	isqrt_step(30);
+
+    return root + (root < value);
+}
+
+//define    sqrt			isqrt
+#endif// comment by mhfan
 #endif
 
 #ifdef __cplusplus
