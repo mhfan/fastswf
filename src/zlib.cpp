@@ -9,6 +9,9 @@
 // installation instructions here:
 // http://boost.org/libs/iostreams/doc/index.html?path=7
 
+// http://boost.org/libs/iostreams/src/zlib.cpp
+// http://svn.boost.org/svn/boost/trunk/libs/iostreams/src/zlib.cpp
+
 // Define BOOST_IOSTREAMS_SOURCE so that <boost/iostreams/detail/config.hpp> 
 // knows that we are building the library (possibly exporting code), rather 
 // than using it (possibly importing code).
