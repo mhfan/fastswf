@@ -1,0 +1,9 @@
+
+0.4: render backend based on openvg/opengles, twin, cairo, agg
+
+0.3: most event handling, include mouse/touchscreen event simulate
+
+0.2: render backend based on skia
+
+0.1: basic working parser
+
