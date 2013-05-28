@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: tag.hpp        Wed, 05 Apr 2006 14:27:22 +0800  mhfan $ *
  *                                                              *
@@ -211,6 +211,12 @@ enum TagCode {
     PathsArePostscript		= 25,
     /* Define:	v3, Unknown
      * The shape paths are defined as in postscript?
+     *
+     * Apparently there was some testing with using Postscript like
+     * instructions to render shapes. I support that is close to the time when
+     * the ActionScript language was not yet fully functional. The content of
+     * this tag is not described anywhere and is more than likely not
+     * supported in newer versions.
      */
 
     PlaceObject2		= 26,
@@ -244,7 +250,7 @@ enum TagCode {
     /* Define:	v3
      * Define a simple geometric shape.
      */
-	    
+
     DefineText2			= 33,
     /* Define:	v3
      * Defines a text of characters displayed using a font. Transparency is
@@ -364,6 +370,7 @@ enum TagCode {
     UnusedTag(54),
     UnusedTag(55),
 
+    Export			= 56,
     ExportAssets		= 56,
     /* Define:	v5
      * Exports a list of definitions declared external so they can be used in
@@ -373,6 +380,7 @@ enum TagCode {
      * movie (and you should have just one).
      */
 
+    Import			= 57,
     ImportAssets		= 57,
     /* Define:	v5
      * Imports a list of definitions that are to be loaded from another movie.
@@ -464,6 +472,7 @@ enum TagCode {
      */
 
 
+    Import2			= 71,
     ImportAssets2		= 71,
     /* Define:	v8
      * Imports a list of definitions from another movie. In version 8+, this
@@ -515,6 +524,7 @@ enum TagCode {
     UnusedTag(80),
     UnusedTag(81),
 
+    DoABCDefine			= 82,
     DoABC			= 82,
     /* Action:	v9
      * New container tag for ActionScripts under SWF 9. Includes an
@@ -533,6 +543,7 @@ enum TagCode {
 
     UnusedTag(85),
 
+    DefineSceneAndFrameData	= 86,
     DefineSceneAndFrameLabelData= 86,
     /* Define:	v9
      * Define raw data for scenes and frames.
@@ -582,17 +593,15 @@ enum TagCode {
 };
 
 #if 1
-//#define	ADD_TAG_NAME(tag) [TAG::CODE::tag] = #tag	// XXX:
-#define	ADD_TAG_NAME(tag) push_back(#tag)
-
 struct TagNameTable: public std::vector<const char*> {
     TagNameTable() {
-	resize(TAG::CODE::MaxTagNumber);
+	reserve(TAG::CODE::MaxTagNumber);
+#define	ADD_TAG_NAME(tag) push_back(#tag)
+//#define	ADD_TAG_NAME(tag) [TAG::CODE::tag] = #tag	// XXX:
 #else
-#define	ADD_TAG_NAME(tag) insert(value_type(TAG::CODE::tag, #tag))
-
 struct TagNameTable: public std::map<uint16_t, const char*> {
     TagNameTable() {
+#define	ADD_TAG_NAME(tag) insert(value_type(TAG::CODE::tag, #tag))
 #endif
 	//ADD_TAG_NAME(FileHeader);
 	ADD_TAG_NAME(End);			//  0
@@ -689,7 +698,7 @@ struct TagNameTable: public std::map<uint16_t, const char*> {
 	ADD_TAG_NAME(DefineFont4);
 
 	//ADD_TAG_NAME(DefineBitsPtr);		// 1023
-    };
+    }
 };
 
 struct Tag {
@@ -707,18 +716,26 @@ struct Tag {
      */
 
     union {
-	struct __attribute__((packed)) {
-	    // 0x000~0x1ff for future use,
-	    // 0x200~0x3ff for third party application use
+	struct {
 	    uint16_t siz_:6, code:10;	// XXX:
-	};  uint16_t __;	uint8_t _[2];
-    };	    //uint32_t size;		// used only when loading/parsing
+	};  uint16_t TagCodeAndLength;
+	    /* 0x000~0x1ff for future use,
+	     * 0x200~0x3ff for third party application use
+	     */
+    };	    //uint32_t size;	// used only when loading/parsing
 
-    Tag(BitStream& bs) { load(bs); };
-    Tag(Tag& t): code(t.code)/*, size(t.size)*/ { };
+    Tag(BitStream& bs) { load(bs); }
+    Tag(Tag& t): TagCodeAndLength(t.TagCodeAndLength)/*: size(t.size)*/ { }
+
+    void load(BitStream& bs) {
+	bs >> TagCodeAndLength;
+	if (siz_ == 0x3f) bs >> size; else size = siz_;
+	tend = bs.pos + size;
+    }
 
 #ifndef	NDEBUG
     virtual void dump(std::ostream& os) {	// XXX:
+	uint16_t tlen = sizeof(TagCodeAndLength) + (0x3f == siz_ ? 4 : 0);
 	static TagNameTable tnTbl;
 #if 1
 	const char* tn = tnTbl[code];
@@ -727,36 +744,47 @@ struct Tag {
 	TagNameTable::iterator it = tnTbl.find(code);
 	os  << (it == tnTbl.end() ? "UnknownTag" : it->second)
 #endif
-	    << '(' << code << "): \t0x" << std::setfill('0') << std::hex
-	    << std::setw(8) << (tend - size) << " ~ 0x"
-	    << std::setw(8) <<  tend << " (" << std::dec
-	    << size << " bytes)\n" << std::setfill(' ');
-    };
+	    << '/' << code << ": \t0x" << std::setfill('0') << std::hex
+	    << std::setw(8) << (tend - size - tlen) << " +("
+	    << std::setfill(' ') << std::dec << tlen << " + "
+	    << size << ")\n";
+    }
 #endif
 
-    void load(BitStream& bs) {		bs >> __;
-	if (siz_ == 0x3f) bs >> size; else size = siz_;
-    };
-
-    virtual ~Tag() { };
+    virtual ~Tag() { }
 
     static uint32_t size, tend;
-    static uint8_t  swfv, X, XX;
+    static uint8_t  swfv; //X, XX;
+};
+
+//typedef Tag End;
+struct End: public Tag {
+    End(Tag& t, BitStream& bs): Tag(t) { }
 };
 
 struct TagUnknown: public Tag {
-    TagUnknown(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+     TagUnknown(Tag& t, BitStream& bs): Tag(t), data(NULL) { load(bs); }
 
-    void load(BitStream& bs) { bs.ignore(size); };
+    ~TagUnknown() { delete[] data; }
+
+    void load(BitStream& bs) {
+	if (0) bs.ignore(size); else {
+	    data = new uint8_t[size];
+	    bs.read((char*)data, size);
+	}
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
-	os  << "\tignoring " << size << " bytes data\n";
-    };
-};
-typedef	TagUnknown TagDefault;
-typedef	TagUnknown TagUnused;
+	if (data) dump_data(std::clog, data, size); else
+	os  << "  (ignoring " << size << " bytes data)\n";
+    }
 
-#if 1
+    uint8_t* data;
+};
+typedef	TagUnknown TagUnused;
+typedef	TagUnknown TagDefault;
+
+typedef TagUnknown FreeCharacter;
 typedef TagUnknown PathsArePostscript;
 typedef TagUnused  UnusedTag_27;
 typedef TagUnknown SyncFrame;
@@ -774,42 +802,117 @@ typedef TagUnknown ExternalFont;
 typedef TagUnused  UnusedTag_53;
 typedef TagUnused  UnusedTag_54;
 typedef TagUnused  UnusedTag_55;
-typedef TagUnknown DebugID;
 typedef TagUnused  UnusedTag_67;
 typedef TagUnused  UnusedTag_68;
+
+typedef TagUnknown ImportAssets2;
 typedef TagUnknown DoABCAction;
-typedef TagUnused  UnusedTag_79;
-typedef TagUnused  UnusedTag_80;
-typedef TagUnused  UnusedTag_81;
+typedef TagUnknown DefineFontAlignZones;
+typedef TagUnknown CSMTextSettings;
+typedef TagUnknown DefineFont3;
+typedef TagUnknown SymbolClass;
+typedef TagUnknown Metadata;
+typedef TagUnknown DefineScalingGrid;
+typedef TagUnknown UnusedTag_79;
+typedef TagUnknown UnusedTag_80;
+typedef TagUnknown UnusedTag_81;
+typedef TagUnknown DoABC;
+typedef TagUnknown DefineMorphShape2;
 typedef TagUnused  UnusedTag_85;
-#endif
+typedef TagUnknown DefineSceneAndFrameLabelData;
+typedef TagUnknown DefineBinaryData;
+typedef TagUnknown DefineFontName;
+typedef TagUnknown StartSound2;
+typedef TagUnknown DefineFont4;
 
-#if 1
-struct FreeCharacter: public Tag {
-    FreeCharacter(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+struct FileAttributes: public Tag {
+    /* The FileAttributes tag defines characteristics of the SWF file. This
+     * tag is required for SWF 8 and later and must be the first tag in the
+     * SWF file. Additionally, the FileAttributes tag can optionally be
+     * included in all SWF file versions.
+     *
+     * The HasMetadata flag identifies whether the SWF file contains the
+     * Metadata tag. Flash Player does not care about this bit field or the
+     * related tag but it is useful for search engines.
+     *
+     * The UseNetwork flag signifies whether Flash Player should grant the SWF
+     * file local or network file access if the SWF file is loaded locally.
+     * The default behavior is to allow local SWF files to interact with local
+     * files only, and not with the network.  However, by setting the
+     * UseNetwork flag, the local SWF can forfeit its local file system access
+     * in exchange for access to the network. Any version of SWF can use the
+     * UseNetwork flag to set the file access for locally loaded SWF files
+     * that are running in Flash Player 8 or later.
+     */
 
-    void load(BitStream& bs) { bs.ignore(size); };
+    union {
+	struct {
+	    uint32_t UseNetwork:1, SWFRelativeURL:1,
+		     SupressCrossDomainCaching:1,
+		     ActionScript3:1, HasMetadata:1,
+		     UseGPU:1, UseDirectBlit:1,
+		     Reserved:25;
+	};  uint32_t _;
+    };
+
+    FileAttributes(Tag& t, BitStream& bs): Tag(t), _(0x0) { load(bs); }
+
+    void load(BitStream& bs) { bs >> _; }
+
+    void dump(std::ostream& os) {	Tag::dump(os);
+	os  << "  Flags:0x"	 << std::setfill('0') << std::hex
+	    << std::setw(8) << _ << std::setfill(' ') << std::dec
+	    << "; UseDirectBlit:" << UseDirectBlit
+	    << ", UseGPU:" << UseGPU << "," << std::endl
+	    << "  HasMetadata:" << HasMetadata
+	    << ", ActionScript3:" << ActionScript3
+	    << ", UseNetwork:" << UseNetwork << std::endl;
+    }
 };
 
 struct GeneratorCommand: public Tag {
     uint32_t ver;
     std::string info;
 
-    GeneratorCommand(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    GeneratorCommand(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
     void load(BitStream& bs) {
 	info.resize(size - sizeof(ver));
 	bs >> ver >> info;
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
-	os  << "  Generator v" << ver << ": " << info.data() << std::endl;
-    };
+	os  << "  Generator v" << ver << ": " << info/*.data()*/ << std::endl;
+    }
 };
-#else// useless, safely ignored
-typedef TagUnknown FreeCharacter;
-typedef TagUnknown GeneratorCommand;
-#endif
+
+struct DebugID: public Tag {
+    //std::string uuid;
+    uint8_t* uuid;
+
+    /* The DebugID tag is used to match a debug file (.swd) with a Flash
+     * animation (.swf). This is used by the Flash environment and is not
+     * required to create movies otherwise.
+     *
+     * The uuid is a universally unique identifier. The size should be 128
+     * bytes. It is otherwise defined by the size of the tag. All Unix and
+     * MS-Windows OSes offer a library to generate UUIDs. Although, you can
+     * very well just use a simple counter, it will work too.
+     */
+
+     DebugID(Tag& t, BitStream& bs): Tag(t) { load(bs); }
+    ~DebugID() { delete[] uuid; }
+
+    void load(BitStream& bs) {
+	uuid = new uint8_t[size + 1];
+	bs.read((char*)uuid, size);
+	uuid[size] = '\0';
+    }
+
+    void dump(std::ostream& os) {	Tag::dump(os);
+	os  << "  UUID: " << uuid << std::endl;
+    }
+};
 
 /* Definition and control tags:
  *
@@ -831,7 +934,7 @@ struct  ControlTag;
 struct  PlaceObject;
 
 typedef DefineTag Character;
-typedef uint16_t CharacterID;
+typedef uint16_t  CharacterID;
 
 //typedef std::vector<Character*> Dictionary;	// better to use map container
 typedef std::map<uint16_t, Character*> Dictionary;
@@ -868,16 +971,17 @@ typedef std::map<uint16_t, Character*> Dictionary;
 struct AttrInfo { uint16_t rfid, depth; };
 
 struct DefineTag: public Tag {
-#ifndef	NDEBUG
-    uint16_t id;			// XXX: useless in map container
-#else
-    static uint16_t id;
-#endif//NDEBUG
+#ifdef	NDEBUG
+    static
+#endif
+    uint16_t id;	// useless duplicated in map container
 
-    DefineTag(Tag& t): Tag(t) { id = 0u; };
-    DefineTag(Tag& t, BitStream& bs): Tag(t) { bs >> id;    add2dict(); };
+    DefineTag(Tag& t): Tag(t) { id = 0u; }
+    DefineTag(Tag& t, BitStream& bs): Tag(t) { load(bs);    add2dict(); }
 
-    void add2dict() { di->insert(Dictionary::value_type(id, this)); };
+    void add2dict() { di->insert(Dictionary::value_type(id, this)); }
+
+    void load(BitStream& bs) {	bs >> id; }
 
     virtual void show(AttrInfo* attr) = 0;
     //virtual int operator() () = 0;
@@ -887,11 +991,55 @@ struct DefineTag: public Tag {
     static Dictionary* di;
 };
 
+/* Shapes:
+ *
+ * The SWF shape architecture is designed to be compact, flexible and rendered
+ * very quickly to the screen. It is similar to most vector formats in that
+ * shapes are defined by a list of edges called a path. A path may be closed,
+ * where the start and end of the path meet to close the figure, or open,
+ * where the path forms an open-ended stroke. A path may contain a mixture of
+ * straight edges, curved edges, and `pen up and move' commands. The latter
+ * allows multiple disconnected figures to be described by a single shape
+ * structure.
+ *
+ * A fill style defines the appearance of an area enclosed by a path. Fill
+ * styles supported by the SWF file format include a color, a gradient, or a
+ * bitmap image.
+ *
+ * A line style defines the appearance of the outline of a path. The line
+ * style may be a stroke of any thickness and color.
+ *
+ * Most vector formats allow only one fill and line style per path. The SWF
+ * file format extends this concept by allowing each edge to have its own line
+ * and fill style.  This can have unpredictable results when fill styles
+ * change in the middle of a path.
+ *
+ * A shape is composed of the following elements:
+ *
+ *  CharacterId - A 16-bit value that uniquely identifies this shape as a
+ *  `character' in the dictionary. The CharacterId can be referred to in
+ *  control tags such as PlaceObject. Characters can be reused and combined
+ *  with other characters to make more complex shapes.
+ *
+ *  Bounding box - The rectangle that completely encloses the shape.
+ *
+ *  Fill style array - A list of all the fill styles used in a shape.
+ *
+ *  Line style array - A list of all the line styles used in a shape.  126
+ *  Shapes
+ *
+ *  Shape record array - A list of shape records. Shape records can define
+ *  straight or curved edges, style changes, or move the drawing position.
+ *
+ *  NOTE: Line and fill styles are defined only once and may be used (and
+ *  reused) by any of the edges in the shape.
+ */
 
 struct DefineShape: public DefineTag {
     Rect br;	ShapeWithStyle sws;
 
-    DefineShape(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); };
+    DefineShape(Tag& t): DefineTag(t) { }
+    DefineShape(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); }
 
     void load(BitStream& bs) {
 	if (code == TAG::CODE::DefineShape2)
@@ -900,37 +1048,62 @@ struct DefineShape: public DefineTag {
 	    ShapeWithStyle::lots =
 	    ShapeWithStyle::hasa = (code == TAG::CODE::DefineShape3);
 	bs >> br >> sws;
-    };
+    }
 
     void show(AttrInfo* attr) {
 	fr->DrawShape(&sws, reinterpret_cast<PlaceObject*>(attr));
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Object(shape) #" << id << " in " << br << std::endl << sws;
-    };
+    }
 };
 typedef	DefineShape DefineShape2;
 typedef	DefineShape DefineShape3;
+
+struct DefineShape4: public DefineShape {
+    Rect ebr;
+    union {	 uint8_t _;
+	struct { uint8_t UsesScalingStrokes:1, UsesNonScalingStrokes:1,
+			 UsesFillWindingRule:1, Reserved:5;
+	};
+    };
+
+    DefineShape4(Tag& t, BitStream& bs): DefineShape(t) { load(bs); }
+
+    void load(BitStream& bs) {
+	ShapeWithStyle::lots = ShapeWithStyle::ls2 =
+	ShapeWithStyle::hasa = true;
+	bs >> br >> ebr >> _ >> sws;
+    }
+
+    void show(AttrInfo* attr) {
+	fr->DrawShape(&sws, reinterpret_cast<PlaceObject*>(attr));
+    }
+
+    void dump(std::ostream& os) {	Tag::dump(os);
+	os  << "  Object(shape) #" << id << " in " << br << std::endl << sws;
+    }
+};
 
 struct DefineMorphShape: public DefineTag {
     Rect br0, br1;
     //uint32_t off2;			// XXX: useless
     MorphShapeWithStyle sws;
 
-    DefineMorphShape(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); };
+    DefineMorphShape(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); }
 
     void load(BitStream& bs) {		uint32_t off2;
 	bs >> br0 >> br1 >> off2 >> sws;
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Object(morph) #" << id << " from " << br0
 	    << " to " << br1 << std::endl << sws;
-    };
+    }
 };
 
 struct ImageBitmap: public DefineTag {
@@ -941,14 +1114,14 @@ struct ImageBitmap: public DefineTag {
 
      ImageBitmap(Tag& t): DefineTag(t) { bmpd = paf = NULL; }
      ImageBitmap(Tag& t, BitStream& bs): DefineTag(t, bs) { bmpd = paf = NULL; }
-    ~ImageBitmap() { delete[] bmpd; delete[] paf; };
+    ~ImageBitmap() { delete[] bmpd; delete[] paf; }
 };
 
 struct DefineBitsLossless: public ImageBitmap {
     enum { FMT__8BIT = 0x03, FMT_15BIT, FMT_32BIT, FMT_16BIT, FMT_24BIT, };
 
      DefineBitsLossless(Tag& t, BitStream& bs):
-	 ImageBitmap(t, bs) { load(bs); };
+	 ImageBitmap(t, bs) { load(bs); }
 
     void load(BitStream& bs) {
 	uint8_t* data = new uint8_t[(size -= 7u)];
@@ -956,19 +1129,20 @@ struct DefineBitsLossless: public ImageBitmap {
 	bs.read((char*)data, size);
 	decode(data);	size += 7u;
 	delete[] data;
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Object(image) #" << id << ": " << width << "x" << height
-	    << "@0x" << std::setfill('0') << std::setw(2) << std::hex
-	    << fmtn  << std::setfill(' ') << std::endl	  << std::dec;
-    };
+	    << "@0x" << std::setfill('0') << std::hex << std::setw(2)
+	    << fmtn  << std::setfill(' ') << std::dec << std::endl;
+    }
 
     void decode(uint8_t* data) {
 	uint32_t nlen;
+
 	switch (fmtn) {
 	case FMT__8BIT: {
 	    nlen = (pitch = (width + 3u) & ~0x03) * height;
@@ -1038,18 +1212,18 @@ struct DefineBitsLossless: public ImageBitmap {
 	    }
 	}   break;
 	}
-    };
+    }
 };
 typedef	DefineBitsLossless DefineBitsLossless2;
 
 struct DefineBitsJPEG: public ImageBitmap {
 
     ~DefineBitsJPEG() {
-	if (jtbl.src) {
-	    jpeg_destroy_decompress(&jtbl);
-	    jtbl.src = NULL;
-	}
+	if (!jtbl.src) return;
+	jpeg_destroy_decompress(&jtbl);
+	jtbl.src = NULL;
     }
+
      DefineBitsJPEG(Tag& t, BitStream& bs): ImageBitmap(t) {
 	jsmgr.init_source 	= js_init_ource;
         jsmgr.skip_input_data	= js_skip_input_data;
@@ -1061,16 +1235,17 @@ struct DefineBitsJPEG: public ImageBitmap {
 	jerr.error_exit = j_error_exit;
 
 	load(bs);
-     };
+     }
 
     void load(BitStream& bs) {
-	uint8_t* data;
 	uint32_t nlen = size;
-	if (code != TAG::CODE::JPEGTables) {
-	    bs >> id;	add2dict();	nlen -= 2u;
-	}   bs.read((char*)(data = new uint8_t[nlen]), nlen);
+	uint8_t* data;
 
+	if (code != TAG::CODE::JPEGTables) {
+	    DefineTag::load(bs); add2dict();	nlen -= 2u;
+	}   bs.read((char*)(data = new uint8_t[nlen]), nlen);
 	//dump_data(std::clog, data, nlen);
+
 	if (code == TAG::CODE::JPEGTables) {
 	    if (setjmp(jclt.jbuf)) {
 		jpeg_destroy_decompress(&jtbl);
@@ -1086,25 +1261,42 @@ struct DefineBitsJPEG: public ImageBitmap {
 
 	    // XXX: maybe we can free JPEGTables structure after here
 	}   else decode(data, nlen);	delete[] data;
-    };
+    }
 
-    void show(AttrInfo* attr) { };
+    void show(AttrInfo* attr) { }
 
     void dump(std::ostream& os) {
 	uint32_t nlen = size;		Tag::dump(os);
 	if (code == TAG::CODE::JPEGTables) os  << "  JPEG tables";
-	else {				nlen -= 2u;
+	else {	nlen -= 2u;
 	    os  << "  Object(JPEG) #" << id;
 	}   os  << " with " << nlen << " bytes\n";
-    };
+    }
 
     void decode(uint8_t* data, uint32_t nlen) {
 	struct jpeg_decompress_struct jpds;
 
+	/* Parameter to be fed into the deblocking filter. The parameter
+	 * describes a relative strength of the deblocking filter from 0-100%
+	 * expressed in a normalized 8.8 fixed point format.
+	 */
+
+	FIXED8 DeblockParam;
+	uint32_t offa = 0u;
+
+	const uint8_t PNG_hdr[] = {
+	    0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A
+	}, GIF89a_hdr[] = { 'G', 'I', 'F', '8', '9', 'a' };
+
+	if (!memcmp(data, PNG_hdr, sizeof(PNG_hdr))) {	// TODO:
+	    return;
+	} else
+	if (!memcmp(data, GIF89a_hdr, sizeof(GIF89a_hdr))) {	// TODO:
+	    return;
+	} //else if (memcmp(data, 0xD8FF, 2)) ;	// XXX: JPEG/SOI
+
 	jclt.data = (char*)data;
 	jclt.size = nlen;
-
-	uint32_t offa=0u;
 
 	// FIXME: urgly code here
 	if (code == TAG::CODE::DefineBits) {
@@ -1121,16 +1313,28 @@ struct DefineBitsJPEG: public ImageBitmap {
 	jpds.client_data = &jclt;
 	jpds.src = &jsmgr;
 
-	if (code == TAG::CODE::DefineBitsJPEG3) {
+	if (TAG::CODE::DefineBitsJPEG2 < code) {
 #if	__BYTE_ORDER == __BIG_ENDIAN
-	    offa = ((data[3] <<  0) | (data[2] <<  8) |
-		    (data[0] << 16) |  data[1] << 24);
+	    offa = ((data[0] << 24) | (data[1] << 16) |
+		    (data[2] <<  8) |  data[3] <<  0);
 #else// XXX: le2ne_32()
 	    offa = *(uint32_t*)data;
 #endif
 
-	    jclt.size = offa;		jclt.data += 4;
+	    jclt.size = offa;		jclt.data += 4u;
+
+	    if (code == TAG::CODE::DefineBitsJPEG4) {
+#if	__BYTE_ORDER == __BIG_ENDIAN
+		DeblockParam =  (((uint8_t*)jclt.data)[0] << 8) |
+				(((uint8_t*)jclt.data)[1] << 0);
+#else// XXX: le2ne_32()
+		DeblockParam = *(FIXED8*)jclt.data;
+#endif
+		jclt.data += 2u;
+	    }
 	}
+
+	(void)DeblockParam;	// FIXME:
 
 #if 	__BYTE_ORDER == __BIG_ENDIAN
 	if (*(uint32_t*)jclt.data == 0xFFD9FFD8)
@@ -1139,8 +1343,6 @@ struct DefineBitsJPEG: public ImageBitmap {
 	if (*(uint32_t*)jclt.data == 0xD8FFD9FF)
 	    *(uint32_t*)jclt.data =  0xD9FFD8FF;
 #endif
-
-	jpeg_read_header(&jpds, FALSE);	// XXX:
 
 	djpeg(&jpds);
 
@@ -1152,7 +1354,7 @@ struct DefineBitsJPEG: public ImageBitmap {
 
 	jpeg_finish_decompress (&jpds);
 	jpeg_destroy_decompress(&jpds);
-    };
+    }
 
     void djpeg(struct jpeg_decompress_struct* jpds) {
 	uint8_t* ptr;	JSAMPROW buffer[1];	assert(jpds);
@@ -1178,7 +1380,7 @@ struct DefineBitsJPEG: public ImageBitmap {
 	}   break;
 	case JCS_RGB:; default:;
 	}
-    };
+    }
 
     static struct JPEGClient jclt;
     static struct jpeg_error_mgr jerr;
@@ -1189,6 +1391,7 @@ typedef	DefineBitsJPEG JPEGTables;
 typedef	DefineBitsJPEG DefineBits;
 typedef	DefineBitsJPEG DefineBitsJPEG2;
 typedef	DefineBitsJPEG DefineBitsJPEG3;
+typedef	DefineBitsJPEG DefineBitsJPEG4;
 
 struct DefineButton: public DefineTag {
     std::vector<Button*> btVec;
@@ -1199,10 +1402,10 @@ struct DefineButton: public DefineTag {
 		it != btVec.end(); ++it) delete *it;
 	for (std::vector<Action*>::iterator it = axVec.begin();
 		it != axVec.end(); ++it) delete *it;
-    };
+    }
      DefineButton(Tag& t, BitStream& bs): DefineTag(t, bs) {
 	load(bs);	cxf = NULL;	siVec = NULL;
-     };
+     }
 
     void load(BitStream& bs) {
 	for (uint16_t i=0u; ; ++i) {	uint8_t state;
@@ -1213,10 +1416,10 @@ struct DefineButton: public DefineTag {
 	do { ax = new Action;		bs >> *ax;
 	     axVec.push_back(ax);
 	} while (ax->id != ACTION::CODE::End);
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  <<   "  Object(button) #" << id << std::endl;
@@ -1224,7 +1427,7 @@ struct DefineButton: public DefineTag {
 		it != btVec.end(); ++it) os << **it;
 	for (std::vector<Action*>::iterator it = axVec.begin();
 		it != axVec.end(); ++it) os << **it;
-    };
+    }
 
     std::vector<SoundInfo>* siVec;
     CXForm* cxf;
@@ -1239,14 +1442,14 @@ struct DefineButton2: public DefineTag {
 
      DefineButton2(Tag& t, BitStream& bs): DefineTag(t, bs) {
 	load(bs);			//cxf = NULL;	siVec = NULL;
-    };
+    }
 
     ~DefineButton2() {
 	for (std::vector<Button2  *>::iterator it = btVec.begin();
 		it != btVec.end(); ++it) delete *it;
 	for (std::vector<Condition*>::iterator it = cdVec.begin();
 		it != cdVec.end(); ++it) delete *it;
-    };
+    }
 
     void load(BitStream& bs) {		uint16_t btns;
 	bs >> _ >> btns;
@@ -1259,10 +1462,10 @@ struct DefineButton2: public DefineTag {
 	    bs >> btns;			cd = new Condition;
 	    bs >> *cd;			cdVec.push_back(cd);
 	}
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  <<  "  Object(button) #" << id
@@ -1271,7 +1474,7 @@ struct DefineButton2: public DefineTag {
 		it != btVec.end(); ++it) os << **it;
 	for (std::vector<Condition*>::iterator it = cdVec.begin();
 		it != cdVec.end(); ++it) os << **it;
-    };
+    }
 
     //std::vector<SoundInfo>* siVec;
     //CXForm* cxf;			// XXX: does DefineButton2 need these?
@@ -1284,7 +1487,7 @@ struct DefineFont: public DefineTag {
 #endif
     std::vector<FontShape> ftVec;
 
-    DefineFont(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); };
+    DefineFont(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); }
 
     void load(BitStream& bs) {	uint16_t i, glyf;
 	bs >> glyf;		glyf >>= 1;	// at least 1;
@@ -1294,10 +1497,10 @@ struct DefineFont: public DefineTag {
 	for (uint16_t i=1; i < glyf; ++i) bs >> ofVec[i];
 #endif
 	for (i=0; i < glyf; ++i) bs >> ftVec[i];
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	uint16_t i = 0, cnt = ftVec.size();
@@ -1305,7 +1508,7 @@ struct DefineFont: public DefineTag {
 	for (; i < cnt; ++i)
 	    os  << "    Glyph #" << std::setw(4) << i << ": " << ftVec[i];
 	os  << std::setfill(' ');
-    };
+    }
 
     DefineFontInfo* fi;
 };
@@ -1325,7 +1528,7 @@ struct DefineFontInfo: public Tag {
     };	    //uint8_t lang;		// since V6
     std::vector<uint16_t> ftmap;	// wide
 
-    DefineFontInfo(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    DefineFontInfo(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
     void load(BitStream& bs) {
 	union { uint8_t nlen, lang, code; };
@@ -1342,7 +1545,7 @@ struct DefineFontInfo: public Tag {
 	if (5u < swfv) bs >> _ >> lang;
 	if (wide) for (i=0; i < glyf; ++i)   bs >> ftmap[i];
 	else	  for (i=0; i < glyf; ++i) { bs >> code;    ftmap[i] = code; }
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	uint16_t i, glyf = ftmap.size();
@@ -1351,9 +1554,9 @@ struct DefineFontInfo: public Tag {
 	for (i=0; i < glyf; ++i)
 	    os  << "      Glyph #" << std::setw(4) << i
 		<< ": `" << (char)ftmap[i] << "'(0x" << std::hex
-		<< ftmap[i] << ")" << std::endl	     << std::dec;
+		<< ftmap[i] << ")" << std::dec << std::endl;
 	os  << std::setfill(' ');
-    };
+    }
 };
 typedef DefineFontInfo DefineFontInfo2;
 
@@ -1364,10 +1567,6 @@ struct DefineFont2: public DefineTag {
     };
 
     union {
-	struct {
-	    uint8_t bold:1, italic:1, wide:1, woff:1,
-		    reserved:3, has_layout:1;
-	}   V6;
 	struct {
 	    uint8_t bold:1, italic:1, wide:1, woff:1,
 		    ansii:1, unicode:1, shiftjis:1, has_layout:1;
@@ -1387,7 +1586,7 @@ struct DefineFont2: public DefineTag {
     //int16_t kernings;			// used only when loading/parsing
     std::map<uint32_t, int16_t> knMap;	// wide
 
-    DefineFont2(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); };
+    DefineFont2(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); }
 
     void load(BitStream& bs) {
 	union { uint8_t nlen, code; };	uint16_t i, glyf;
@@ -1438,10 +1637,10 @@ struct DefineFont2: public DefineTag {
 		}
 	    }
 	}
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	uint16_t i, glyf = ftVec.size();
@@ -1472,7 +1671,7 @@ struct DefineFont2: public DefineTag {
 		    << ") adjuct " << it->second << " twips\n";
 	    os  << std::setfill(' ');
 	}
-    };
+    }
 };
 
 struct DefineText: public DefineTag {
@@ -1481,12 +1680,12 @@ struct DefineText: public DefineTag {
     //uint8_t gnb, anb;			// used only when loading/parsing
     std::vector<TextRecordString*> teVec;
 
-     DefineText(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); };
+     DefineText(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); }
 
     ~DefineText() {
 	for (std::vector<TextRecordString*>::iterator it = teVec.begin();
 		it != teVec.end(); ++it) delete *it;
-    };
+    }
 
     void load(BitStream& bs) {	uint8_t gnb, anb;
 	bool alpha = (code == TAG::CODE::DefineText2);
@@ -1497,17 +1696,17 @@ struct DefineText: public DefineTag {
 	    TextRecordString* trs = new TextRecordString(tr, alpha);
 	    bs >> *trs;			teVec.push_back(trs);
 	}
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Object(text) #" << id
 	    << " in " << br << " by " << mtx << std::endl;
 	for (std::vector<TextRecordString*>::iterator it = teVec.begin();
 		it != teVec.end(); ++it) os << **it;
-    };
+    }
 };
 typedef	DefineText DefineText2;
 
@@ -1516,15 +1715,9 @@ struct DefineEditText: public DefineTag {
     union {
 	struct {
 	    uint16_t has_font:1, has_mxlen:1, has_color:1, readonly:1,
-		     password:1, multiline:1, word_wrap:1, has_text:1, 
-		     use_outlines:1,	html:1, reserved:1, border :1,
-		     no_select:1, has_layout:1, auto_size:1, reserve_:1;
-	}   V6;
-	struct {
-	    uint16_t has_font:1, has_mxlen:1, has_color:1, readonly:1,
-		     password:1, multiline:1, word_wrap:1, has_text:1, 
-		     use_outlines:1,	html:1, reserved:1, border :1,
-		     no_select:1, has_layout:1, reserve_:2;
+		     password:1, multiline:1, word_wrap:1, has_text:1,
+		     use_outlines:1, html:1, WasStatic:1, border:1,
+		     no_select:1, has_layout:1, auto_size:1, HasFontClass:1;
 	};  uint16_t _;
     }	flag;
     uint16_t mxlen;			// out of order regarding alignment
@@ -1537,7 +1730,7 @@ struct DefineEditText: public DefineTag {
     }	layout;
     std::string tnam, text;
 
-    DefineEditText(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); };
+    DefineEditText(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); }
 
     void load(BitStream& bs) {
 	bs >> br >> flag._;
@@ -1547,16 +1740,16 @@ struct DefineEditText: public DefineTag {
 	if (flag.has_layout)bs >> layout.align >> layout.lmgn >>
 		layout.rmgn >> layout.indent >> layout.leading;
 	bs >> tnam;	    if (flag.has_text) bs >> text;
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Object(edit) #" << id << " in " << br << std::endl
 	    << "    \"" << tnam.data() << "\": \'" << text.data()
 	    << '\'' << std::endl;
-    };
+    }
 };
 typedef DefineEditText DefineEditText2;
 
@@ -1571,27 +1764,27 @@ struct DefineVideoStream: public DefineTag {
 	struct { uint8_t smoothing:1, deblocking:2, xxxxx:5; };
     };	uint8_t codec;
 
-    DefineVideoStream(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); };
+    DefineVideoStream(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); }
 
     void load(BitStream& bs) {		uint16_t fc;
 	bs >> fc >> width >> height >> _ >> codec;
 	vfVec.resize(fc);
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Object(video) #" << id << " with " << vfVec.size()
 	    << " frames of " << width << "x" << height << "@0x"
-	    << std::setfill('0') << std::setw(2) << std::hex << codec
-	    << std::setfill(' ') << std::endl	 << std::dec;
+	    << std::setfill('0') << std::hex << std::setw(2) << codec
+	    << std::setfill(' ') << std::dec << std::endl;
 #if 0
 	if (!vfVec.empty())	// FIXME:
 	    for (std::vector<VideoFrame*>::iterator it = vfVec.begin();
 		    it != vfVec.end(); ++it) os  << (*it)->dump(os);
 #endif
-    };
+    }
 
     std::vector<VideoFrame*> vfVec;
 };
@@ -1605,20 +1798,20 @@ struct FrameList: public std::vector<std::vector<ControlTag*> > {
 struct DefineSprite: public DefineTag {
     //uint16_t fc;			// useless in vector container
 
-    DefineSprite(Tag& t, BitStream& bs): 
-	    DefineTag(t, bs) { fl.pf = fl.lf = 0u; load(bs); };
+    DefineSprite(Tag& t, BitStream& bs):
+	    DefineTag(t, bs) { fl.pf = fl.lf = 0u; load(bs); }
 
     void load(BitStream& bs) {	uint16_t fc;
 	bs >> fc;		fl.resize(fc);
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Object(sprite) #" << id
 	    << " with " << fl.size() << " frames\n";
-    };
+    }
 
     FrameList fl;
 };
@@ -1629,21 +1822,22 @@ struct VideoFrame: public Tag {
     uint16_t frame;
     uint8_t* data;
 
-    ~VideoFrame() { delete[] data; };
-     VideoFrame(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    ~VideoFrame() { delete[] data; }
+     VideoFrame(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
     void load(BitStream& bs) {	    uint16_t rfid;
 	uint32_t len = size - 4;    bs >> rfid >> frame;
 	bs.read((char*)(data = new uint8_t[len]), len);
+
 	Dictionary::iterator it = DefineTag::di->find(rfid);
 	assert(it != DefineTag::di->end() &&
 	       it->second->code == TAG::CODE::DefineVideoStream);
 	reinterpret_cast<DefineVideoStream*>(it->second)->vfVec.push_back(this);
-    };
+    }
 
     void dump(std::ostream& os) {   Tag::dump(os);
 	os  << "  Video frame #" << frame << std::endl;	// XXX:
-    };
+    }
 };
 
 
@@ -1651,7 +1845,7 @@ struct DefineButtonCXForm: public Tag {
     //uint16_t btid;			// used only when loading/parsing
     CXForm cxf;
 
-    DefineButtonCXForm(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    DefineButtonCXForm(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
     void load(BitStream& bs) {	uint16_t btid;
 	bs >> btid >> cxf;
@@ -1664,11 +1858,11 @@ struct DefineButtonCXForm: public Tag {
 	    reinterpret_cast<DefineButton2*>(it->second)->cxf = &cxf;
 #endif
 	else assert(false);
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Button CXF: " << cxf << std::endl;	// XXX:
-    };
+    }
 };
 
 struct DefineButtonSound: public Tag {
@@ -1680,7 +1874,7 @@ struct DefineButtonSound: public Tag {
     //uint16_t btid;			// used only when loading/parsing
     std::vector<SoundInfo> siVec;
 
-    DefineButtonSound(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    DefineButtonSound(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
     void load(BitStream& bs) {	uint16_t btid;
 	siVec.resize(POINTER_MAX);	bs >> btid;
@@ -1694,13 +1888,13 @@ struct DefineButtonSound: public Tag {
 	    reinterpret_cast<DefineButton2*>(it->second)->siVec = &siVec;
 #endif
 	else assert(false);
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Button sound: \n";
 	for (std::vector<SoundInfo>::iterator it = siVec.begin();
 		it != siVec.end(); ++it) os << *it;
-    };
+    }
 };
 
 typedef DefineTag Object;
@@ -1768,12 +1962,12 @@ typedef std::list<std::pair<Object*, AttrInfo*> > DispList;
  */
 
 struct ControlTag: public Tag {
-    ControlTag(Tag& t): Tag(t) { add2ctrl(); };
+    ControlTag(Tag& t): Tag(t) { add2ctrl(); }
 
-    void add2ctrl() { (*fl)[fl->lf].push_back(this); };
+    void add2ctrl() { (*fl)[fl->lf].push_back(this); }
 
-    virtual void exec() { dtrace; };
     //virtual int operator() () = 0;
+    virtual void exec() { }
 
     static FrameList* fl;
     static DispList* dl;
@@ -1785,8 +1979,8 @@ struct PlaceObject: public ControlTag, public AttrInfo {
     Matrix mtx;
     CXForm cxf;
 
-    PlaceObject(Tag& t): ControlTag(t) { };
-    PlaceObject(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+    PlaceObject(Tag& t): ControlTag(t) { }
+    PlaceObject(Tag& t, BitStream& bs): ControlTag(t) { load(bs); }
 
     void load(BitStream& bs) {
 	uint32_t pos = bs.pos + size;
@@ -1794,7 +1988,7 @@ struct PlaceObject: public ControlTag, public AttrInfo {
 	if (bs.pos < pos) bs >> cxf; else
 	    cxf.mr = cxf.mg = cxf.mb = cxf.ma = CXForm::DEFAULT_MUL,
 	    cxf.ar = cxf.ag = cxf.ab = cxf.aa = CXForm::DEFAULT_ADD;
-    };
+    }
 
     void exec() {
 	Dictionary::iterator ic = DefineTag::di->find(rfid);
@@ -1803,83 +1997,119 @@ struct PlaceObject: public ControlTag, public AttrInfo {
 
 	while (++it != dl->end()) if (depth < it->second->depth) break;
 	dl->insert(it, DispList::value_type(ic->second, this));
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Place object #" << rfid << " in depth #" << depth
 	    << ": \n\t" << mtx << ", " << cxf << std::endl;
-    };
+    }
 };
 
 struct PlaceObject3: public PlaceObject {
-    union {	 uint8_t v8;
-	struct { uint8_t has_fltr:1, has_blm:1, has_bmc:1,
-			 has_img:1, has_clsn:1, reserve:3; };
-    };
     union {
 	struct {
-	    uint8_t has_mv:1, has_id:1, has_mtx:1, has_cxf:1,
-		    has_mpos:1, has_name:1, has_clip:1, has_axn:1;
-	};  uint8_t _;
+	    union {
+		struct {
+		     uint8_t has_mv:1, has_id:1, has_mtx:1, has_cxf:1,
+			     has_mpos:1, has_name:1, has_clip:1, has_axn:1;
+		};   uint8_t _;
+	    };
+	    struct { uint8_t has_fltr:1, has_blm:1, has_bmc:1,
+			     has_img:1, has_cls:1, reserved:3; };
+	};  uint16_t __;
     };					// inheritant from PlaceObject
     //uint16_t depth, rfid;		//Matrix mtx;	CXForm cxf;
-    uint16_t mpos, clip;		// out of order regarding alignment
     uint8_t blm, bmc;			// out of order regarding alignment
-    std::string onam;
+    uint16_t mpos, clip;		// out of order regarding alignment
+    std::string cls, onam;
     std::vector<Filter*> flVec;		//uint16_t reserved;
     uint32_t flags;
     //std::vector<Event> enVec;		// better to use map container
     std::map<uint32_t, std::vector<Action*> > evMap;
     //uint32_t end;			// used only when loading/parsing
 
-/*
- * The possible values are as defined in the following table:
- *
- * The equations use R as Result, C as the object color component, B and the
- * background color. All components are viewed as values from 0 to 255. The
- * result is a temporary value which is later saved in the new background
- * before processing the next object.
- *
- *  Name 	Value 	Comment
- *
- *  Normal 	1 	Copy the object as is.  R = C
- *  Layer 	2 	Uses multiple objects to render (?)
- *  Multiply 	3 	Multiply the background with the object colors.
- *      		R = B x C / 255
- *  Screen 	4 	Multiply the inverse colors of the background
- *      		and the object.  R = (255 - B) x (255 - C) / 255
- *  Lighten 	5 	Take the largest of each component of the background
- *      		and object.  R = max(B, C)
- *  Darken 	6 	Take the smallest of each component of the background
- *      		and object.  R = min(B, C)
- *  Difference 	7 	Defines the absolute value of the difference.
- *      		R = | B - C |
- *  Add 	8 	Add the components and clamp at 255.
- *      		R = min(B + C, 255)
- *  Subtract 	9 	Subtract the components and clamp at 0.
- *      		R = max(B - C, 0)
- *  Invert 	10 	Inverse the background components
- *      		R = 255 - B
- *  Alpha 	11 	Copy the alpha channel of the object in the background.
- *      		This mode requires that the parent (background) be
- *      		set to mode Layer.  Ra = Ca
- *  Erase 	12 	Copy the inverse the alpha channel of the object
- *      		in the background alpha. This mode requires that
- *      		the parent (background) be set to mode Layer.
- *      		Ra = 255 - Ca
- *  Overlay 	13 	Apply the same effect as multiply or screen depending
- *      		on the background color before the operation.
- *      		(Note: the comparison with 128 could be <= and
- *      		the results would be same for C but not B.) 
- *      		R = (B < 128 ? B x C : (255 - B) * (255 - C)) / 255
- *  HardLight 	14 	Apply the same effect as multiply or screen depending
- *      		on the object color.
- *      		(Note: the comparison with 128 could be <= and
- *      		the results would be same for C but not B.)
- *      		R = (C < 128 ? B x C : (255 - B) * (255 - C)) / 255
- */
+    /* mpos is used in two cases:
+     *
+     * (1) When the place object references a DefineMorphShape object. In this
+     * case, it defines a linear position between the first and second shapes
+     * (0 - draws shape 1 and 65535 - draws shape 2, any intermediate value
+     * draws a morphed shape, smaller the value the more it looks like shape 1
+     * larger the value, the more it looks like shape 2).
+     *
+     * (2) When the place object references a VideoFrame object. In this case,
+     * the morph position represents the frame number. This means any movie is
+     * limited to 65536 frames (the first frame is frame #0). At a regular,
+     * NTSC frame rate, it represents about 18 minutes of video. Long videos
+     * can be created using a new video stream every 18 minutes.
+     */
 
-     PlaceObject3(Tag& t, BitStream& bs): PlaceObject(t) { load(bs); };
+    enum BlendMode {
+	/* The equations use R as Result, C as the object color component, B
+	 * and the background color. All components are viewed as values from
+	 * 0 to 255. The result is a temporary value which is later saved in
+	 * the new background before processing the next object.
+	 */
+
+	//Normal = 0,
+	Normal = 1,	// R = C,
+	// Copy the object as is.
+
+	Layer,		//
+	// Uses multiple objects to render (?)
+
+	Multiply,	// R = B * C / 255,
+	// Multiply the background with the object colors.
+
+	Screen,		// R = (255 - B) * (255 - C) / 255,
+	// Multiply the inverse colors of the background and the object.
+
+	Lighten,	// R = max(B, C),
+	// Take the largest of each component of the background and object.
+
+	Darken,		// R = min(B, C),
+	// Take the smallest of each component of the background and object.
+
+	Difference,	// R = | B - C |,
+	// Defines the absolute value of the difference.
+
+	Add,		// R = min(B + C, 255),
+	// Add the components and clamp at 255.
+
+	Substract,	// R = max(B - C, 0),
+	// Subtract the components and clamp at 0.
+
+	Invert,		// R = 255 - B,
+	// Inverse the background components.
+
+	Alpha,		// Ra = Ca,
+	/* Copy the alpha channel of the object in the background. This mode
+	 * requires that the parent (background) be set to mode Layer.
+	 */
+
+	Erase,		// Ra = 255 - Ca,
+	/* Copy the inverse of the alpha channel of the object in the
+	 * background alpha. This mode requires that the parent (background)
+	 * be set to mode Layer.
+	 */
+
+	Overlay,	// R = (B < 128 ? B * C : (255 - B) * (255 - C)) / 255,
+	/* Apply the same effect as multiply or screen depending on the
+	 * background color before the operation. (Note: the comparison with
+	 * 128 could be <= and the results would be same for C but not B. I
+	 * current do not know which one is picked)
+	 */
+
+	Hardlight,	// R = (C < 128 ? B * C : (255 - B) * (255 - C)) / 255,
+	/* Apply the same effect as multiply or screen depending on the object
+	 * color. (Note: the comparison with 128 could be <= and the results
+	 * would be same for C but not B. I currently do not know which one is
+	 * picked)
+	 */
+
+	// Values 15 to 255 are reserved.
+    };
+
+     PlaceObject3(Tag& t, BitStream& bs): PlaceObject(t), __(0x0) { load(bs); }
 
     ~PlaceObject3() {
 	for (std::vector<Filter*>::iterator it = flVec.begin();
@@ -1890,12 +2120,12 @@ struct PlaceObject3: public PlaceObject {
 	    for (std::vector<Action*>::iterator it = axVec.begin();
 		    it != axVec.end(); ++it) delete *it;
 	}
-    };
+    }
 
     void load(BitStream& bs) {
 	if (code == TAG::CODE::PlaceObject3)
-	    bs >> v8; else v8 = 0x00;
-	bs >> _ >> depth;
+	    bs >> __; else bs >> _;	bs >> depth;
+	if (has_cls)  bs >> cls;
 	if (has_id)   bs >> rfid; else rfid = 0u;
 	if (has_mtx)  bs >> mtx;
 	if (has_cxf) {
@@ -1908,21 +2138,24 @@ struct PlaceObject3: public PlaceObject {
 	if (has_fltr) {
 	    Filter* pf;			uint8_t fcnt, type;
 	    bs >> fcnt;			flVec.resize(fcnt);
-	    for (uint8_t i=0; i < fcnt; ++i) {	bs >> type;
+	    for (uint8_t i = 0; i < fcnt; ++i) {	bs >> type;
 		switch (type) {
-		case Filter::DROPSHADOW:
+		case Filter::DropShadow:
 		    pf = new FilterDropShadow(type, bs);	break;
-		case Filter::BLUR: 
+		case Filter::Blur:
 		    pf = new FilterBlur(type, bs);		break;
-		case Filter::GROW: 
+		case Filter::Grow:
 		    pf = new FilterGrow(type, bs);		break;
-		case Filter::BEVEL: 
+		case Filter::Bevel:
 		    pf = new FilterBevel(type, bs);		break;
-		case Filter::GRADIENTGROW: 
+		case Filter::GradientGrow:
 		    pf = new FilterGradientGrow(type, bs);	break;
-		case Filter::ADJUSTCOLOR: 
-		    pf = new FilterAdjustColor(type, bs);	break;
-		case Filter::GRADIENTBEVEL: 
+		case Filter::Convolution:
+		    pf = new FilterConvolution(type, bs);	break;
+		case Filter::ColorMatrix:
+		//case Filter::AdjustColor:
+		    pf = new FilterColorMatrix(type, bs);	break;
+		case Filter::GradientBevel:
 		    pf = new FilterGradientBevel(type, bs);	break;
 		default:		pf = NULL;
 		}			flVec[i] = pf;
@@ -1953,7 +2186,7 @@ struct PlaceObject3: public PlaceObject {
 		}
 	    }
 	} else flags = 0u;
-    };
+    }
 
     void exec() {
 	if (has_id) {
@@ -1978,33 +2211,37 @@ struct PlaceObject3: public PlaceObject {
 	    assert(it != dl->rend());
 	    if (has_mv) it->second = this; else dl->erase((++it).base());
 	}
-	if (v8);    // TODO:
-    };
+    }
 
     void dump(std::ostream& os) {
 	Tag::dump(os);			os  << "  ";
 	if (has_id) os  << (has_mv ? "Rep" : "P") << "lace object #"
 		<< rfid << " to"; else
 	    os  << (has_mv ? "M" : "Rem") << "ove object on";
-	    os  << " depth #" << depth << ": \n";
+	    os  << " depth #" << depth << ": 0x"
+		<< std::setfill('0') << std::hex  << std::setw(4) << __
+		<< std::setfill(' ') << std::dec  << std::endl;
+	if (has_cls)  os  << "    CLS:  " << cls  << std::endl;
 	if (has_mtx)  os  << "    MTX:  " << mtx  << std::endl;
 	if (has_cxf)  os  << "    CXF:  " << cxf  << std::endl;
 	if (has_mpos) os  << "    MPos: " << mpos << std::endl;
 	if (has_name) os  << "    Name: " << onam.data() << std::endl;
 	if (has_clip) os  << "    Clip #" << clip << std::endl;
-    };
+	if (has_fltr) ;
+	if (has_axn) ;
+    }
 };
 typedef	PlaceObject3 PlaceObject2;
 
 struct RemoveObject: public ControlTag {
     uint16_t rfid, depth;
 
-    RemoveObject(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+    RemoveObject(Tag& t, BitStream& bs): ControlTag(t) { load(bs); }
 
     void load(BitStream& bs) {
 	if (code == TAG::CODE::RemoveObject) bs >> rfid;
 	else rfid = 0;			     bs >> depth;
-    };
+    }
 
     void exec() {
 	DispList::reverse_iterator it = dl->rbegin();
@@ -2015,12 +2252,12 @@ struct RemoveObject: public ControlTag {
 #endif
 	for (; it != dl->rend(); ++it) if (depth == it->second->depth) break;
 	assert(it != dl->rend());	dl->erase((++it).base());
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Remove object #" << rfid
 	    << " in depth #" << depth << std::endl;
-    };
+    }
 };
 typedef	RemoveObject RemoveObject2;
 
@@ -2031,29 +2268,31 @@ struct DoAction: public ControlTag {
     ~DoAction() {
 	for (std::vector<Action*>::iterator it = axVec.begin();
 		it != axVec.end(); ++it) delete *it;
-    };
+    }
 
-     DoAction(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+     DoAction(Tag& t, BitStream& bs): ControlTag(t) { load(bs); }
 
     void load(BitStream& bs) {		Action* ax;
 	if (code == TAG::CODE::DoInitAction) bs >> spid; else spid = 0;
 	do { ax = new Action;		bs >> *ax;
 	     axVec.push_back(ax);
 	} while (ax->id != ACTION::CODE::End);
-    };
+    }
 
     void exec() {   // TODO:
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	for (std::vector<Action*>::iterator it = axVec.begin();
 		it != axVec.end(); ++it) os << **it;
-    };
+    }
 };
 typedef DoAction DoInitAction;
 
 struct DefineSound: public DefineTag {
-    enum { FMT_RAW, FMT_ADPCM, FMT_MP3, FMT_RAWLE, FMT_NELLYMOSER = 0x06, };
+    enum {  FMT_RAW, FMT_ADPCM, FMT_MP3, FMT_RAW_LE,
+	    FMT_NELLYMOSER_16K, FMT_NELLYMOSER_8K,
+	    FMT_NELLYMOSER,	FMT_SPEEX = 11u, };
 
     //uint16_t id;
     union {	 uint8_t _;		// stereo: LRLRLR...
@@ -2062,27 +2301,30 @@ struct DefineSound: public DefineTag {
     uint32_t smpl;
     uint8_t* data;
 
-    ~DefineSound() { delete[] data; };
-     DefineSound(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); };
+    ~DefineSound() { delete[] data; }
+     DefineSound(Tag& t, BitStream& bs): DefineTag(t, bs) { load(bs); }
 
     void decode(bool m2s) {		// TODO: streamized decoding
 	switch (fmtn) {
 	case FMT_RAW:
 	case FMT_ADPCM:
 	case FMT_MP3:
-	case FMT_RAWLE:
+	case FMT_RAW_LE:
+	case FMT_NELLYMOSER_16K:
+	case FMT_NELLYMOSER_8K:
 	case FMT_NELLYMOSER:
+	case FMT_SPEEX:
 	default:;
 	}
-    };
+    }
 
     void load(BitStream& bs) {
 	uint32_t len = size - 7u;	bs >> _ >> smpl;
 	bs.read((char*)(data = new uint8_t[len]), len);		si = NULL;
-    };
+    }
 
     void show(AttrInfo* attr) {		// TODO: decode-output-free
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Object(sound): #" << id << " of " << std::setw(5)
@@ -2091,15 +2333,16 @@ struct DefineSound: public DefineTag {
 	    << (stereo ? "stereo" : "mono") << ", "
 	    << DefineSound::get_fmts(fmtn) << "("
 	    << (int)fmtn << "), " << smpl << " samples\n";
-    };
+    }
 
     static uint16_t get_rate(uint8_t ir)
-	    { return ((11025 * (0x01 << ir)) >> 1); };
+	    { return ((11025u * (0x01 << ir)) >> 1); }
     static const char* get_fmts(uint8_t fmtn) {
 	static const char* fmts[16] = {
-	    "raw", "adpcm", "mp3", "rawle", NULL, NULL, "nellymoser", NULL,
+	    "raw", "adpcm", "mp3", "rawle", "nellymoser(16kHz)",
+	    "nellymoser(8kHz)", "nellymoser", "speex", NULL,
 	};	    return fmts[fmtn];
-    };
+    }
 
     SoundInfo* si;
 };
@@ -2109,19 +2352,19 @@ struct SoundStreamHead2;
 struct SoundStreamBlock: public ControlTag {	// XXX:
     uint8_t* data;
 
-    ~SoundStreamBlock() { delete[] data; };
-     SoundStreamBlock(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+    ~SoundStreamBlock() { delete[] data; }
+     SoundStreamBlock(Tag& t, BitStream& bs): ControlTag(t) { load(bs); }
 
     void decode(bool m2s) {
-    };
+    }
 
     void load(BitStream& bs) {
 	bs.read((char*)(data = new uint8_t[size]), size);
 	//if (last) last->next = this;	next = NULL;
-    };
+    }
 
     void exec() {   // TODO: decode-output-free
-    };
+    }
 
     static SoundStreamHead2* head;  // XXX:
     //static SoundStreamBlock* last;
@@ -2136,14 +2379,14 @@ struct SoundStreamHead2: public ControlTag {
 	};  uint16_t _;
     };	    uint16_t smpl;		int16_t  seek;		// MP3 only
 
-    SoundStreamHead2(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+    SoundStreamHead2(Tag& t, BitStream& bs): ControlTag(t) { load(bs); }
 
     void load(BitStream& bs) {		 bs >> _ >> smpl;
 	if (fmtn == DefineSound::FMT_MP3)bs >> seek; else seek = 0;
 	SoundStreamBlock::head = this;	//SoundStreamBlock::last = NULL;
-    };
+    }
 
-    void exec() { };	// TODO:
+    void exec() { }	// TODO:
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Playback:     " << std::setw(5)
@@ -2157,22 +2400,22 @@ struct SoundStreamHead2: public ControlTag {
 	    << ", " << DefineSound::get_fmts(fmtn)
 	    << ", " << smpl << " samples";
 	if (seek) os << ", seek to " << seek;	os << std::endl;
-    };
+    }
 };
 typedef	SoundStreamHead2 SoundStreamHead;
 
 #if 1
 struct StopSound: public ControlTag {
-    StopSound(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+    StopSound(Tag& t, BitStream& bs): ControlTag(t) { load(bs); }
 
-    void load(BitStream& bs) { bs.ignore(size); };
+    void load(BitStream& bs) { bs.ignore(size); }
 
     void exec() {	// TODO:
 	DispList::iterator it = dl->begin();
 	while (++it != dl->end())
 	    if (it->first->code == TAG::CODE::DefineSound) break;
 	dl->erase(it);	// XXX:
-    };
+    }
 };
 #else
 typedef TagUnknown StopSound;
@@ -2181,9 +2424,9 @@ typedef TagUnknown StopSound;
 struct StartSound: public ControlTag, public AttrInfo {
     SoundInfo si;
 
-    StartSound(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+    StartSound(Tag& t, BitStream& bs): ControlTag(t) { load(bs); }
 
-    void load(BitStream& bs) { bs >> si; };
+    void load(BitStream& bs) { bs >> si; }
 
     void exec() {
 	DispList  ::iterator it = dl->begin();
@@ -2194,110 +2437,137 @@ struct StartSound: public ControlTag, public AttrInfo {
 	rfid = si.rfid, depth = 0u;
 	while (++it != dl->end()) if (depth < it->second->depth) break;
 	dl->insert(it, DispList::value_type(ic->second, this));
-    };
+    }
 
-    void dump(std::ostream& os) {	Tag::dump(os);	    os << si; };
+    void dump(std::ostream& os) {	Tag::dump(os);	    os << si; }
 };
 
 struct FrameLabel: public ControlTag {
     std::string label;
     uint8_t flags;
 
-    FrameLabel(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+    FrameLabel(Tag& t, BitStream& bs): ControlTag(t) { load(bs); }
 
     void load(BitStream& bs) {			  bs >> label;
 	if (5u < swfv && label.size() < size - 1) bs >> flags;
 	else flags = 0u;
-    };
+    }
 
-    void exec() { };
+    void exec() { }
 
     void dump(std::ostream& os) {	Tag::dump(os);
-	os  << "  Frame label: " << label.data() << "(0x" << std::hex
-	    << std::setfill('0') << std::setw(4) << flags << ")\n"
+	os  << "  Frame label: " << label.data() << "(0x"
+	    << std::setfill('0') << std::hex << std::setw(4) << flags << ")\n"
 	    << std::setfill(' ') << std::dec;
-    };
+    }
 };
 
 struct SetBackgroundColor: public DefineTag { // It _is_ a control tag.
     RGB rgb;
 
-    SetBackgroundColor(Tag& t, BitStream& bs): DefineTag(t) { load(bs); };
+    SetBackgroundColor(Tag& t, BitStream& bs): DefineTag(t) { load(bs); }
 
     void load(BitStream& bs) {
 	bs >> rgb;	di->clear();
 	attr.rfid = attr.depth = 0u;
 	ControlTag::dl->insert(ControlTag::dl->begin(),
 		DispList::value_type(this, NULL));
-    };
+    }
 
-    void show(AttrInfo*) { fr->SetBackgroundColor(rgb); };
+    void show(AttrInfo*) { fr->SetBackgroundColor(rgb); }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  " << rgb << std::endl;
-    };
+    }
 
     AttrInfo attr;	// XXX:
 };
 
-struct ShowFrame: public ControlTag {
-    ShowFrame(Tag& t, BitStream& bs): ControlTag(t) { load(bs); };
+#if 0
+struct DefineBinaryData: public DefineTag {
+    /* The DefineBinaryData tag permits arbitrary binary data to be embedded
+     * in a SWF file.  DefineBinaryData is a definition tag, like DefineShape
+     * and DefineSprite. It associates a blob of binary data with a standard
+     * SWF 16-bit character ID. The character ID is entered into the SWF
+     * file's character dictionary.
+     *
+     * DefineBinaryData is intended to be used in conjunction with the
+     * SymbolClass tag. The SymbolClass tag can be used to associate a
+     * DefineBinaryData tag with an AS3 class definition.
+     *
+     * The AS3 class must be a subclass of ByteArray. When the class is
+     * instantiated, it will be populated automatically with the contents of
+     * the binary data resource.
+     */
 
-    void load(BitStream& bs) { bs.ignore(size);	    ++fl->lf; };
+    uint8_t* data;
+
+     DefineBinaryData(Tag& t, BitStream& bs): DefineTag(t) { load(bs); }
+    ~DefineBinaryData() { delete[] data; }
+
+    void load(BitStream& bs) {
+	union { uint32_t reserved, len; };
+	bs >> reserved;
+	len = size - sizeof(reserved);
+	data = new uint8_t[len];
+	bs.read((char*)data, len);
+    }
+
+    void show(AttrInfo* attr) {		// TODO:
+    }
+
+    void dump(std::ostream& os) {	Tag::dump(os);
+	dump_data(std::clog, data, size - 4);
+    }
+};
+#endif
+
+struct ShowFrame: public ControlTag {
+    ShowFrame(Tag& t, BitStream& bs): ControlTag(t) { ++fl->lf; }
 
     void curs(uint16_t x, uint16_t y) {
 	// TODO: draw a cursor on the frame
-    };
+    }
 
-    void exec() { };   // TODO:
+    void exec() { }   // TODO:
 };
 
-struct End: public Tag {
-    End(Tag& t, BitStream& bs): Tag(t) { load(bs); };
-
-    void load(BitStream& bs) { bs.ignore(size); };
-};
-
-#if 1
 struct DefineBitsPtr: public Tag {
     uint32_t rfid;
 
-    DefineBitsPtr(Tag&t, BitStream& bs): Tag(t) { load(bs); };
+    DefineBitsPtr(Tag&t, BitStream& bs): Tag(t) { load(bs); }
 
-    void load(BitStream& bs) { bs >> rfid; };
+    void load(BitStream& bs) { bs >> rfid; }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Reference to bitmap #" << rfid << std::endl;
-    };
+    }
 };
-#else
-typedef TagUnknown DefineBitsPtr;
-#endif
 
 struct ScriptLimits: public Tag {
     uint16_t recursion, timeout;
 
-    ScriptLimits(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    ScriptLimits(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
-    void load(BitStream& bs) { bs >> recursion >> timeout; };
+    void load(BitStream& bs) { bs >> recursion >> timeout; }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Set max recursion depth: " << recursion
-	    << ", default timeout: " << timeout << std::endl;
-    };
+	    << ", default timeout: " << timeout << 's' << std::endl;
+    }
 };
 
 struct SetTabIndex: public Tag {
     uint16_t depth, tidx;
 
-    SetTabIndex(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    SetTabIndex(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
-    void load(BitStream& bs) { bs >> depth >> tidx; };
+    void load(BitStream& bs) { bs >> depth >> tidx; }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  Set object in depth #" << depth
 	    << " to in tab-index: " << tidx << std::endl;
-    };
+    }
 };
 
 #if 1
@@ -2305,7 +2575,7 @@ struct ProtectDebug: public Tag {
     //uint16_t reserved;		// useless
     std::string md5pass;
 
-    ProtectDebug(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    ProtectDebug(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
     void load(BitStream& bs) {
 	if (4u < swfv && size) {	// XXX:
@@ -2313,11 +2583,11 @@ struct ProtectDebug: public Tag {
 		uint16_t xxxx;	bs >> xxxx;
 	    }			bs >> md5pass;
 	}
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	os  << "  MD5 password: `" << md5pass.data() << "'\n";
-    };
+    }
 };
 #else
 typedef TagDefault ProtectDebug;
@@ -2329,30 +2599,30 @@ struct ExportAssets: public Tag {
     //uint16_t count;			// useless in vector container
     std::vector<External> exVec;	// XXX:
 
-    ExportAssets(Tag& t): Tag(t) { };
-    ExportAssets(Tag& t, BitStream& bs): Tag(t) { load(bs); };
+    ExportAssets(Tag& t): Tag(t) { }
+    ExportAssets(Tag& t, BitStream& bs): Tag(t) { load(bs); }
 
     void load(BitStream& bs) {	uint16_t count;
 	bs >> count;		exVec.resize(count);
 	for (uint16_t i=0; i < count; ++i) bs >> exVec[i];
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	uint16_t i, count = exVec.size();
 	for (i=0; i < count; ++i)
 	    os  << "  ID #" << exVec[i].rfid
 		<< ": " << exVec[i].smbl << std::endl;
-    };
+    }
 };
 
 struct ImportAssets: public ExportAssets {
     std::string url;
 
-    ImportAssets(Tag& t, BitStream& bs): ExportAssets(t) { load(bs); };
+    ImportAssets(Tag& t, BitStream& bs): ExportAssets(t) { load(bs); }
 
     void load(BitStream& bs) {
 	bs >> url;		ExportAssets::load(bs);
-    };
+    }
 
     void dump(std::ostream& os) {	Tag::dump(os);
 	uint16_t i, count = exVec.size();
@@ -2360,7 +2630,7 @@ struct ImportAssets: public ExportAssets {
 	for (i=0; i < count; ++i)
 	    os  << "  ID #" << exVec[i].rfid
 		<< ": " << exVec[i].smbl << std::endl;
-    };
+    }
 };
 
 };

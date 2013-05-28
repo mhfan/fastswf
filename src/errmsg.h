@@ -150,7 +150,7 @@ using std::errno;
 #define dprints(a) do { printk("\033[33m" #a		  \
 			": \033[36m%s\033[0m\n", a);      \
 		} while (0)
-#endif/* comment by mhfan */
+#endif
 
 // for debuging
 #define dmsg(msg) do { \

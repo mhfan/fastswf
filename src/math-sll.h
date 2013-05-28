@@ -493,7 +493,7 @@ static __inline__ sll sllmul(sll left, sll right)
 		"# sllmul\n\t"
 #ifdef	PIC 	// FIXME:
 		"	push	%%ebx\n\t"
-#endif// comment by mhfan
+#endif
 		"	movl	%1, %%eax\n\t"
 		"	mull 	%3\n\t"
 		"	movl	%%edx, %%ebx\n\t"
@@ -513,7 +513,7 @@ static __inline__ sll sllmul(sll left, sll right)
 		"	adcl	%%ecx, %%edx\n\t"
 #ifdef	PIC 	// FIXME:
 		"	pop	%%ebx\n\t"
-#endif// comment by mhfan
+#endif
 		"\n\t"
 		"	btl	$31, %2\n\t"
 		"	jnc	1f\n\t"
@@ -529,7 +529,7 @@ static __inline__ sll sllmul(sll left, sll right)
 		: "ebx", "ecx", "cc"
 #else
 		: "ecx", "cc"
-#endif// comment by mhfan
+#endif
 	);
 	return retval;
 }
@@ -603,7 +603,7 @@ static __inline__ sll sllmul2n(sll x, int n)
 	sll y;
 
 #if defined(__arm__)
-	/* 
+	/*
 	 * On ARM we need to do explicit assembly since the compiler
 	 * doesn't know the range of n is limited and decides to call
 	 * a library function instead.
@@ -638,7 +638,7 @@ static __inline__ sll slldiv2n(sll x, int n)
 	sll y;
 
 #if defined(__arm__)
-	/* 
+	/*
 	 * On ARM we need to do explicit assembly since the compiler
 	 * doesn't know the range of n is limited and decides to call
 	 * a library function instead.
@@ -1114,7 +1114,7 @@ static __inline__ sll sllpow(sll x, sll y)
 static __inline__ sll sllsqrt(sll x)
 {
 	sll n, xn;
-       
+
 	/* Start with a scaling factor of 1 */
 	n = CONST_1;
 
@@ -1169,7 +1169,7 @@ long isqrt(long value)
 }
 
 //define    sqrt			isqrt
-#endif// comment by mhfan
+#endif
 #endif
 
 #ifdef __cplusplus

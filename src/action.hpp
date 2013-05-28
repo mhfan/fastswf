@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: action.hpp     Thu, 06 Apr 2006 14:56:17 +0800  mhfan $ *
  *                                                              *
@@ -37,76 +37,269 @@ namespace ACTION {
 
 namespace CODE {
 
-enum ActionCode {
-    End			= 0x00,	// v1: End a record of actions
-    // 0  	<n.a.>
-
-			//0x01~0x03
-
-    NextFrame		= 0x04,	// v1: Go to the next frame
-    // 0 	<n.a.>
-
-    PrevFrame		= 0x05,	// v1: Go to the previous frame
-    // 0 	<n.a.>
-
-    Play		= 0x06,	// v1: Enter the default auto-loop playback
-    // 0 	<n.a.>
-
-    Stop		= 0x07,	// v1: Stop playing
-    // Only a button (or the plugin menu) can be used to restart the movie 
-    // 0 	<n.a.>
-
-    ToggleQuality	= 0x08, // v1: Change the quality level from low to
-    // high and vice versa. Not sure what happens if you use medium now! 
-    // 0 	<n.a.>
-
-    StopSound		= 0x09, // v2: Stop playing any sound effect
-    // 0 	<n.a.>
-
-    Add			= 0x0A, //*v4: Pops two values, add them and
-    // put the result back on the stack.
-    // 0 (n) 	operation: n2 + n1
-
-    Subtract		= 0x0B, // v4: Pops two values, subtract them and
-    // put the result back on the stack. 
-    // 0 (n) 	operation: n2 - n1
-
-    Multiply		= 0x0C, // v4: Pops two values, multiply them and
-    // put the result back on the stack.
-    // 0 (n) 	operation: n2 * n1
-
-    Divide		= 0x0D, // v4: Pops two values, divide them and
-    // put the result back on the stack.
-    // 0 (f) 	operation: n2 / n1
-
-    Equal		= 0x0E, //*v4: Pops two values, compare them for
-    // equality and put the boolean result back on the stack.
-    // The != is created by adding a LogicalNot after the Equal
-    // 0 (b) 	operation: n2 == n1
-
-    LessThan		= 0x0F, //*v4: Pops two values, compare them for
-    // inequality and put the boolean result back on the stack.
-    // 0 (b) 	operation: n2 < n1
-    /* 
-     * Other comparison operators:
-     * * LessThanorEqual    (n2 <= n1): Swap + LessThan + LogicalNot
-     * * GreaterThanorEqual (n2 >= n1): LessThan + LogicalNot
-     * * Greater Than	    (n2 >  n1): Swap + LessThan
+    /*
+     * Different actions are supported in different version, so please, look
+     * at the version when attempting to use that action.
+     *
+     * Some actions have been deprecated and should not be used in newer
+     * version of Flash (mainly the untyped operators.)
+     *
+     * There are two schemes supported in Flash 9 and over: ActionScript 2 and
+     * 3 (also referenced as AS2 and AS3.)
+     *
+     * AS2 was created in Flash animations version 1, enhanced in versions 3,
+     * 4 and 5. In version 5, it because AS1. Version 6 greatly fixed many of
+     * the problems in older versions. Version 7 and 8 only added a few more
+     * features. Version 9 makes use of Tamarin which is a much more advanced
+     * mechanism used to execute the compiled ActionScript code. The huge
+     * improvement comes from the header that gives the system access to all
+     * the functions and variables without having to search for them through
+     * the action script.
      */
 
-    LogicalAnd		= 0x10, // v4: Pops two values, compute the
-    // LogicalAnd and put the boolean result back on the stack.
-    // Note: if b2 is a function call and b1 is false, then b2 is not called.
-    // 0 (b) 	operation: b2 && b1
+enum ActionCode {
+#define UnusedAction(n)	UnusedAction_##n = n
 
-    LogicalOr		= 0x11, // v4: Pops two values, compute the
-    // LogicalOr and put the boolean result back on the stack.
-    // Note: if b2 is a function call and b1 is true, then b2 is not called.
-    // 0 (b) 	operation: b2 || b1
+    End			= 0x00,
+    /* v1: <n.a.>
+     * Category: Miscellaneous
+     * Structure: <n.a.>
+     * Operation: <n.a.>
+     *
+     * End a record of actions. There are no valid instances where this action
+     * is optional.
+     *
+     * The End action itself as no meaning other than marking the end of the
+     * list of actions. Yet, if reached, the execution of the script ends and
+     * is considered complete.
+     *
+     * IMPORTANT NOTE: This action ends a complete list of actions. Declare
+     * Function, With, try/catch/finally and other blocks of actions are never
+     * ended with this action. Instead, internal blocks have a size in bytes1
+     * that is used to determine the end of the block.
+     */
 
-    LogicalNot		= 0x12, // v4: Pops one value, compute the
-    // LogicalNot and put the result back on the stack.
-    // 0 (b) 	operation: ! b1
+    UnusedAction(0x01),
+    UnusedAction(0x02),
+    UnusedAction(0x03),
+
+    NextFrame		= 0x04,
+    /* v1: <n.a.>
+     * Category: Movie
+     * Structure: <n.a.>
+     * Operation: goto(current_frame + 1);
+     *
+     * Go to the next frame. This means the next Show Frame tag will be hit.
+     * This action does not change the play status.
+     */
+
+    PrevFrame		= 0x05,
+    /* v1: <n.a.>
+     * Category: Movie
+     * Structure: <n.a.>
+     * Operation: goto(current_frame - 1);
+     *
+     * Go to the previous frame. This is the opposite of the Next Frame action.
+     */
+
+    Play		= 0x06,
+    /* v1: <n.a.>
+     * Category: Movie
+     * Structure: <n.a.>
+     * Operation: target_movie.play();
+     *
+     * Enter the standard (default) auto-loop playback. The action only
+     * affects the current target.
+     */
+
+    Stop		= 0x07,
+    /* v1: <n.a.>
+     * Category: Movie
+     * Structure: <n.a.>
+     * Operation: stop();
+     *
+     * Stop playing the current target (remain on the same ShowFrame.)
+     *
+     * Only a button, another script, or the plugin menu can be used to
+     * restart the movie.
+     */
+
+    ToggleQuality	= 0x08,
+    /* v1: <n.a.>
+     * Category: Movie
+     * Structure: <n.a.>
+     * Operation:
+     *	if (_root.quality == HIGH_QUALITY) {
+     *	    _root.set_quality(LOW_QUALITY);
+     *	} else {
+     *	    _root.set_quality(HIGH_QUALITY);
+     *	}
+     *
+     * Change the quality level from low to high and vice versa. At this time,
+     * not sure what happens if you use medium!
+     *
+     * Note that the quality is defined on the root only and affects the
+     * entire output.
+     *
+     * Newer SWF versions (since version 5) should use the movie quality
+     * variable member instead of this direct action.
+     */
+
+    StopSound		= 0x09,
+    /* v2: <n.a.>
+     * Category: Sound
+     * Structure: <n.a.>
+     * Operation: stop_sound();
+     *
+     * This action is a global action that stops all sound effects at once.
+     */
+
+    Add			= 0x0A,
+    /* v4: pop 2 (n), push 1 (n)
+     * Category: Arithmetic
+     * Structure: <n.a.>
+     * Operation:
+     *	n1 := pop();
+     *	n2 := pop();
+     *	r := n2 + n1;
+     *	push(r);
+     *
+     * This action pops two numbers from the stack, add them together and put
+     * the result back on the stack.
+     *
+     * IMPORTANT NOTE: This instruction is not compliant to the ECMA Script
+     * reference. It should only be used in SWF files using version 4. Since
+     * version 5, the Add (typed) action should be used instead.
+     */
+
+    Subtract		= 0x0B,
+    /* v4: pop 2 (n), push 1 (n)
+     * Category: Arithmetic
+     * Structure: <n.a.>
+     * Operation:
+     *	n1 := pop();
+     *	n2 := pop();
+     *	r := n2 - n1;
+     *	push(r);
+     *
+     * This action pops two values, subtract the first one from the second and
+     * put the result back on the stack.
+     */
+
+    Multiply		= 0x0C,
+    /* v4: pop 2 (n), push 1 (n)
+     * Category: Arithmetic
+     * Structure: <n.a.>
+     * Operation:
+     *	n1 := pop();
+     *	n2 := pop();
+     *	r := n2 * n1;
+     *	push(r);
+     *
+     * Pop two values, multiply them and put the result back on the stack.
+     */
+
+    Divide		= 0x0D,
+     /* v4: pop 2 (n), push 1 (n)
+     * Category: Arithmetic
+     * Structure: <n.a.>
+     * Operation:
+     *	n1 := pop();
+     *	n2 := pop();
+     *	r := n2 / n1;
+     *	push(r);
+     *
+     * Pop two values, devide them and put the result back on the stack.
+     *
+     * The numbers are always transformed to floating points. Use the Integral
+     * Part action on the result to extract an integer.
+     *
+     * If n1 is zero, the result NaN, Infinity, or -Infinity is pushed to the
+     * stack in SWF 5 and later. In SWF 4, the result is the string #ERROR#.
+     */
+
+    Equal		= 0x0E,
+    Equals		= 0x0E,
+    /* v4: pop 2 (a), push 1 (b)
+     * Category: Comparisons
+     * Structure: <n.a.>
+     * Operation:
+     *	a1 := pop();
+     *	a2 := pop();
+     *	r := a2 == a1;
+     *	push(r);
+     *
+     * Pop two values, compare them for equality and put the Boolean result
+     * back on the stack.
+     *
+     * If the numbers are equal, true is pushed to the stack for SWF 5 and
+     * later. For SWF 4, 1 is pushed to the stack. Otherwise, false is pushed
+     * to the stack for SWF 5 and later.
+     *
+     * The != is created by adding a Logical Not after the Equal action.
+     *
+     * The way the values are converted is not clearly documented. The fact is
+     * that this operation generally transforms the strings into integers or
+     * floating points which is not ECMA Script compliant.
+     *
+     * This action should only be used in SWF version 4.
+     */
+
+    Less		= 0x0F,
+    LessThan		= 0x0F,
+    /* v4: pop 2 (a), push 1 (b)
+     * Category: Comparisons
+     * Structure: <n.a.>
+     * Operation:
+     *	a1 := pop();
+     *	a2 := pop();
+     *	r := a2 < a1;
+     *	push(r);
+     *
+     * Pop two values, compare them for inequality and put the Boolean result
+     * back on the stack.
+     *
+     * Other comparison operators:
+     *
+     *  LessThan or Equal    (n2 <= n1)	    Swap + LessThan + LogicalNot
+     *  GreaterThan or Equal (n2 >= n1)	    LessThan + LogicalNot
+     *  GreaterThan	     (n2 >  n1)	    Swap + LessThan
+     *
+     * Note that this operator should only be used in version 4. Since version
+     * 5, it is better to use LessThan (typed) or GreaterThan (typed).
+     */
+
+    LogicalAnd		= 0x10,
+    /* v4: pop 2 (b), push 1 (b)
+     * Category: Logical and Bitwise
+     * Structure: <n.a.>
+     * Operation:
+     *	b1 := pop();
+     *	b2 := pop();
+     *	r := b2 && b1;
+     *	push(r);
+     */
+
+    LogicalOr		= 0x11,
+    /* v4: pop 2 (b), push 1 (b)
+     * Category: Logical and Bitwise
+     * Structure: <n.a.>
+     * Operation:
+     *	b1 := pop();
+     *	b2 := pop();
+     *	r := b2 || b1;
+     *	push(r);
+     */
+
+    LogicalNot		= 0x12,
+    /* v4: pop 1 (b), push 1 (b)
+     * Category: Logical and Bitwise
+     * Structure: <n.a.>
+     * Operation:
+     *	b1 := pop();
+     *	r := ! b1;
+     *	push(r);
+     */
 
     StringEqual 	= 0x13, //*v4: Pops two strings, compute the
     // equality and put the boolean result back on the stack.
@@ -137,15 +330,15 @@ enum ActionCode {
     // of that name, and push its value on the stack.
     // 0 (a)	operation: GetVariable(s1)
 
-    /* 
+    /*
      * The variable name can include sprite names separated by slashes and
      * finished by a colon as in:
      *	    /Sprite1/Sprite2:MyVar
      * This gets the variable named MyVar from the sprite named Sprite2 which
      * resides in Sprite1. Note that in a browser you can add variables at the
      * end of the movie URL (as defined in the W3C docs) and these will auto-
-     * matically be accessible via the GetVariable instruction. 
-     *	    my_movie?language=jp 
+     * matically be accessible via the GetVariable instruction.
+     *	    my_movie?language=jp
      * Since Flash V5.x, there are internal variables available to you. These
      * can be read with the Get Variable instruction.
      */
@@ -170,7 +363,7 @@ enum ActionCode {
     GetProperty 	= 0x22, // v4: Query the property 'n1' of the object
     // named 's2' (a field in a structure if you wish), and push the result
     // on the stack. See the table below for a list of possible properties
-    // (or fields) values. 
+    // (or fields) values.
     // 0 (a) 	operation: s2.n1
 
     SetProperty 	= 0x23, // v4: Pop a value from the stack and use it
@@ -277,11 +470,11 @@ enum ActionCode {
     // property to be deleted. Then pop the object from which the property is
     // to be deleted.
     // 0 (undefined) 	operation: delete(s1, o2)
-    /* 
+    /*
      * It is necessary to Push Data type undefined (0x03) before the string
-     * as in: 
+     * as in:
      *	    96 04 00 03 00 'a' 00 3A
-     *	    delete("a"); 
+     *	    delete("a");
      * to delete a global variable. According to some movies I have looked at,
      * the delete instruction returns some undefined value.
      */
@@ -353,7 +546,7 @@ enum ActionCode {
     // push the name of its type back on the stack. The currently supported
     // types are as follow: number, boolean, string, object, movieclip,
     // null, undefined, function
-    // 0 (s) 	operation: typeof(a1) 
+    // 0 (s) 	operation: typeof(a1)
 
     GetTarget		= 0x45, // v5: Pops an object, if it is a valid sprite,
     // push it's path on the stack. A sprite path can be used by different
@@ -365,9 +558,36 @@ enum ActionCode {
     // on the stack. The list is null terminated.
     // 0 (v) 	operation: s1
 
-    TAdd		= 0x47, // v5: Pops two numbers or two strings,
-    // computes the sum or concatenation and push the result back on the stack.
-    // 0 (a) 	operation: i2 + i1 or f2 + f1 or s2 + s1
+    TAdd		= 0x47,
+    /* v5: pop 2 (a), push 1 (a)
+     * Details: (typed)
+     * Category: Arithmetic
+     * Structure: <n.a.>
+     * Operation:
+     * 	a1 = pop();
+     * 	a2 = pop();
+     * 	if (is_int(a1) && is_int(a2)) {
+     *	    i1 := (int)a1;
+     *	    i2 := (int)a2;
+     *	    r  := i1 + i2;	// sum
+     * 	} else
+     * 	if (is_numeric(a1) && is_numeric(a2)) {
+     *	    f1 := (float)a1;
+     *	    f2 := (float)a2;
+     *	    r  := f1 + f2;	// sum
+     * 	} else {
+     *	    s1 := (string)a1;
+     *	    s2 := (string)a2;
+     *	    r  := s1 + s2;	// concatenation
+     * 	}
+     *	    push(r);
+     *
+     * Pops two numbers or two strings, computes the sum or concatenation and
+     * push the result back on the stack.
+     *
+     * This action is typed meaning that it will automatically convert the
+     * parameters as required and in a very well defined manner.
+     */
 
     TLessThan		= 0x48, // v5: Pops two integers or two strings,
     // computes whether they are ordered from smaller to larger and push the
@@ -378,7 +598,7 @@ enum ActionCode {
     // computes whether they are equal and push the result back on the stack.
     // If a mix of types is found, then convertions occur. Strings may be
     // transformed in numbers and numbers in strings as with the untyped Equal
-    // operator. 
+    // operator.
     // 0 (b) 	operation: i2 == i1 or f2 == f1 or s2 == s1
 
     Number		= 0x4A, // v5: Pops one item and transform it into a
@@ -514,14 +734,14 @@ enum ActionCode {
     GetURL		= 0x83, // v1: Load the specified URL in the specified
     // target window.
     // variable 	string	f_url; string	f_target;
-    /* 
+    /*
      * When the target is set as "_level0", the current SWF file is replaced
      * by the file specified in the f_url field. The name in the f_url field
      * should be a proper SWF file or the area will simply become black.
-     * 
+     *
      * When the target is set as "_level1", something special is supposed to
      * happen. I still don't know what it is...  Also the effect of _level1 +
-     * an empty URL is ... (to remove level1?) 
+     * an empty URL is ... (to remove level1?)
      *
      * The URL can be a javascript command when the protocol is set to
      * "javascript:". For instance, you can call your function as follow:
@@ -529,8 +749,8 @@ enum ActionCode {
      * need to concatenate strings and use Get URL2 instead.
      *
      * The target can also be set to the regular HTML names such as "_top" or
-     * a frame name. 
-     */ 
+     * a frame name.
+     */
 
 			//0x84~0x86
 
@@ -546,6 +766,7 @@ enum ActionCode {
     // (Yes! A Throw!) but I wouldn't be surprised if you just get undefined.
     // 1 (a) 	unsigned char	f_register; operation: regs[f_register] = a1
 
+    ConstantPool	= 0x88,
     DeclareDictionary 	= 0x88, // v5: Declare an array of strings which can
     // later be retrieved using the Push Data action with a dictionary lookup.
     // There can be a maximum of 65534 strings. The visibility of a dictionary
@@ -561,13 +782,13 @@ enum ActionCode {
     // Otherwise skip the specified number of actions.
     // 3 	unsigned short	f_frame; unsigned char	f_skip;
 
-    /* This is usually used with a GotoFrame like in: 
+    /* This is usually used with a GotoFrame like in:
      *	    Next Frame
      *	    Wait for Frame #10
      *	    (otherwise skip 1 action)
      *	    Goto Frame #5
      *	    Play
-     *	    End 
+     *	    End
      * This will usually be used to display some Loading... info before the
      * complete movie is loaded.
      */
@@ -593,7 +814,7 @@ enum ActionCode {
     // of bytes that the function declaration uses after the header (i.e. the
     // size of the actions defined in the function). All the actions included
     // in this block are part of the function body.
-    /* variable 
+    /* variable
      *		    struct {
      *			string name;
      *			uint16_t arg_count;
@@ -613,17 +834,17 @@ enum ActionCode {
      * WARNING: the preload/suppress flags are defined on a short and thus the
      * bytes in a Flash file will look swapped.
      */
-    /* 
+    /*
      * Do not terminate a function with an End action
      *
      * A function should terminate with a Return action. The value used by the
-     * return statement will be the only value left on the caller stack. 
+     * return statement will be the only value left on the caller stack.
      *
      * Functions declared with this action code byte also support the use of
      * up to 255 local registers (registers 0 to 254 since the f_reg_count
      * byte specifies the last register which can be used plus one). To access
      * the local registers, use the Push Data action with a load register and
-     * to change a register value use the Store Register action. 
+     * to change a register value use the Store Register action.
      *
      * Also, it is possible to control the preloading or suppressing of the
      * different internal variables: this, arguments, super, _root, _parent
@@ -638,14 +859,14 @@ enum ActionCode {
      * really?!]. If you are writing a smart player, then you may want to
      * avoid creating the variables until they are actually being used (thus
      * when an if() statement ends the function prematurly, you may end up not
-     * creating many of these variables!). 
+     * creating many of these variables!).
      *
      * The preloading bits indicate in which register to load the given
      * internal variable. The suppressing bits indicate which internal
      * variable not to create at all. That is, if the preloading bit is not
      * set and the suppressing is not set, then the internal variable are
      * supposed to be created by name (i.e. you can access a variable named
-     * "this" from within the function when bits 0 and 1 are zero). 
+     * "this" from within the function when bits 0 and 1 are zero).
      *
      * The f_reg_count parameter needs to be specified and it tells the player
      * the largest register number in use in this function. This way it can
@@ -658,7 +879,7 @@ enum ActionCode {
      * _parent in register 2 and the user parameters can be loaded in
      * registers 3, 4 and 5. User parameters are loaded in registers only if
      * their corresponding f_param_register field is not zero (see
-     * swf_params). Also, they don't need to be defined in order. 
+     * swf_params). Also, they don't need to be defined in order.
      *
      * Note that system variables are loaded AFTER arguments. This means if
      * you put an argument in register 3 and this register is also used for
@@ -675,15 +896,15 @@ enum ActionCode {
     /*
      * This has the behavior of the action script: try { ... } catch(name) {
      * ... } finally { ... } At this time, there is no definition of exception
-     * in the action scripts.  But you can write a function which Throws. 
+     * in the action scripts.  But you can write a function which Throws.
      *
      * The sementic of the try/catch/finally block is very well defined in
-     * ECMA 262 version 3 (see pages 87/88). 
+     * ECMA 262 version 3 (see pages 87/88).
      *
      * The f_finally and f_catch may not both be null or the sementic of the
      * try block would be wrong. The f_try_size, f_catch_size and
      * f_finally_size are defined in bytes and give the size of each of the
-     * block of instructions just like a function definition. 
+     * block of instructions just like a function definition.
      *
      * Do not terminate these blocks with an End action
      *
@@ -708,7 +929,8 @@ enum ActionCode {
 
 			//0x95
 
-    PushData		= 0x96, // v4: Push some immediate data on the stack.
+    Push		= 0x96,
+    PushData		= 0x96,
     /* variable 	
      *		    struct {
      *			unsigned char	f_type;
@@ -739,20 +961,20 @@ enum ActionCode {
     // target name (s1).
     // 1 	unsigned char	f_method; operation: s1 s2
 
-    /* 
+    /*
      * All the usual HTML target names seem to be supported (_top, _blank,
      * <frame name>, etc.) You can also use the special internal names _level0
      * to _level10. _level0 is the current movie. Other levels, I'm still not
      * too sure how these can be used.
-     * 
+     *
      * Use f_method to tell Flash how to handle the variables (see table
      * below). The variables of the current SWF context can be forwarded to
      * the destination page using GET or POST (this means you can create
-     * dynamic forms with full HTML conformance). 
+     * dynamic forms with full HTML conformance).
      *
      * It seems that in V4.x (or would it be in V6.x?!? ¡ª it doesn't seem to
      * work in V5.x) you could use URL2 to read a text file (with a .txt
-     * extension) with a list of variables using something like this: 
+     * extension) with a list of variables using something like this:
      *	    Push URL "myvars.txt", Target "_level0"; Get URL2;
      * The syntax of the file myvars.txt is lines which are defined as a
      * variable name followed by an equal sign and the contents for that
@@ -766,7 +988,7 @@ enum ActionCode {
      *		0	<don't send variables>
      *		1	GET
      *		2	POST
-     */ 
+     */
 
     DeclareFunction 	= 0x9B, // v5: Declare a function which can later be
     // called with the CallFunction action. The f_function_length defines the
@@ -786,11 +1008,11 @@ enum ActionCode {
      * Prior version 6, the Macromedia player would keep all the data pushed
      * in a function as is when the function returned whether there is a
      * return statement or not.
-     * 
+     *
      * Since version 7, it is preferable to use the new type of functions:
      * Declare Function (V7).
      */
-    
+
 			//0x9C
 
     BranchIfTrue 	= 0x9D, // v4: Pop a boolean value; if true then
@@ -821,334 +1043,221 @@ enum ActionCode {
 			//0xA0~0xFF
 };
 
-#if 1
-#define _End			End
-
-
-
-#define _NextFrame		NextFrame
-#define _PrevFrame		PrevFrame
-#define _Play			Play
-#define _Stop			Stop
-#define _ToggleQuality		ToggleQuality
-#define _StopSound		StopSound
-#define _Add			Add
-#define _Subtract		Subtract
-#define _Multiply		Multiply
-#define _Divide			Divide
-#define _Equal			Equal
-#define _LessThan		LessThan
-#define _LogicalAnd		LogicalAnd
-#define _LogicalOr		LogicalOr
-#define _LogicalNot		LogicalNot
-#define _StringEqual		StrictEqual
-#define _StringLength		StringLength
-#define _SubString		SubString
-
-#define _Pop			Pop
-#define _IntegralPart		IntegralPart
-
-
-
-#define _GetVariable		GetVariable
-#define _SetVariable		SetVariable
-
-
-#define _SetTarget2		SetTarget2
-#define _ConcatenateStrings	ConcatenateStrings
-#define _GetProperty		GetProperty
-#define _SetProperty		SetProperty
-#define _DuplicateSprite	DuplicateSprite
-#define _RemoveSprite		RemoveSprite
-#define _Trace			Trace
-#define _StartDrag		StartDrag
-#define _StopDrag		StopDrag
-#define _StringLessThan		StringLessThan
-#define _Throw			Throw
-#define _CastObject		CastObject
-#define _Implements		Implements
-#define _FSCommand2		FSCommand2
-
-
-#define _Random			Random
-#define _WStringLength		WStringLength
-#define _Ord			Ord
-#define _Chr			Chr
-#define _GetTimer		GetTimer
-#define _WSubString		WSubString
-#define _WOrd			WOrd
-#define _WChr			WChr
-
-
-#define _Delete			Delete
-#define _DeleteAll		DeleteAll
-#define _SetLocalVariable	SetLocalVariable
-#define _CallFunction		CallFunction
-#define _Return			Return
-#define _Modulo			Modulo
-#define _New			New
-#define _DeclareLocalVariable	DeclareLocalVariable
-#define _DeclareArray		DeclareArray
-#define _DeclareObject		DeclareObject
-#define _TypeOf			TypeOf
-#define _GetTarget		GetTarget
-#define _Enumerate		Enumerate
-#define _TAdd			TAdd
-#define _TLessThan		TLessThan
-#define _TEqual			TEqual
-#define _Number			Number
-#define _String			String
-#define _Duplicate		Duplicate
-#define _Swap			Swap
-#define _GetMember		GetMember
-#define _SetMember		SetMember
-#define _Increment		Increment
-#define _Decrement		Decrement
-#define _CallMethod		CallMethod
-#define _NewMethod		NewMethod
-#define _InstanceOf		InstanceOf
-#define _EnumerateObject	EnumerateObject
-    //0x56~0x5F
-#define _And			And
-#define _Or			Or
-#define _Xor			Xor
-#define _ShiftLeft		ShiftLeft
-#define _ShiftRight		ShiftRight
-#define _ShiftRightUnsigned	ShiftRightUnsigned
-#define _StrictEqual		StrictEqual
-#define _GreaterThan		GreaterThan
-#define _StringGreaterThan	StringGreaterThan
-#define _Extends		Extends
-    //0x70~0x7F
-#define _GotoFrame		GotoFrame
-#define _GetURL			GetURL
-
-
-
-#define _StoreRegister		StoreRegister
-#define _DeclareDictionary	DeclareDictionary
-#define _StrictMode		StrictMode
-#define _WaitForFrame		WaitForFrame
-#define _SetTarget		SetTarget
-#define _GotoLabel		GotoLabel
-#define _WaitForFrame2		WaitForFrame2
-#define _DeclareFunction2	DeclareFunction2
-#define _Try			Try
-
-
-
-
-#define _With			With
-
-#define _PushData		PushData
-
-
-#define _BranchAlways		BranchAlways
-#define _GetURL2		GetURL2
-#define _DeclareFunction	DeclareFunction
-
-#define _BranchIfTrue		BranchIfTrue
-#define _CallFrame		CallFrame
-#define _GotoExpression		GotoExpression
-    //0xA0~0xFF
-#endif
 };
 
 struct ActionNameTable: public std::map<uint16_t, const char*> {
     ActionNameTable() {
-#define	ACTION_NAME_MAP_INSERT(tag) \
-	insert(value_type(ACTION::CODE::_##tag, #tag))
-	ACTION_NAME_MAP_INSERT(End);
+#define	ADD_ACTION_NAME(tag) \
+	insert(value_type(ACTION::CODE::tag, #tag))
+
+	ADD_ACTION_NAME(End);			//  0
 
 
 
-	ACTION_NAME_MAP_INSERT(NextFrame);
-	ACTION_NAME_MAP_INSERT(PrevFrame);
-	ACTION_NAME_MAP_INSERT(Play);
-	ACTION_NAME_MAP_INSERT(Stop);
-	ACTION_NAME_MAP_INSERT(ToggleQuality);
-	ACTION_NAME_MAP_INSERT(StopSound);
-	ACTION_NAME_MAP_INSERT(Add);
-	ACTION_NAME_MAP_INSERT(Subtract);
-	ACTION_NAME_MAP_INSERT(Multiply);
-	ACTION_NAME_MAP_INSERT(Divide);
-	ACTION_NAME_MAP_INSERT(Equal);
-	ACTION_NAME_MAP_INSERT(LessThan);
-	ACTION_NAME_MAP_INSERT(LogicalAnd);
-	ACTION_NAME_MAP_INSERT(LogicalOr);
-	ACTION_NAME_MAP_INSERT(LogicalNot);
-	ACTION_NAME_MAP_INSERT(StringEqual);
-	ACTION_NAME_MAP_INSERT(StringLength);
-	ACTION_NAME_MAP_INSERT(SubString);
+	ADD_ACTION_NAME(NextFrame);
+	ADD_ACTION_NAME(PrevFrame);		//  5
+	ADD_ACTION_NAME(Play);
+	ADD_ACTION_NAME(Stop);
+	ADD_ACTION_NAME(ToggleQuality);
+	ADD_ACTION_NAME(StopSound);
+	ADD_ACTION_NAME(Add);
+	ADD_ACTION_NAME(Subtract);
+	ADD_ACTION_NAME(Multiply);
+	ADD_ACTION_NAME(Divide);
+	ADD_ACTION_NAME(Equal);
+	ADD_ACTION_NAME(LessThan);
+	ADD_ACTION_NAME(LogicalAnd);
+	ADD_ACTION_NAME(LogicalOr);
+	ADD_ACTION_NAME(LogicalNot);
+	ADD_ACTION_NAME(StringEqual);
+	ADD_ACTION_NAME(StringLength);
+	ADD_ACTION_NAME(SubString);
 
-	ACTION_NAME_MAP_INSERT(Pop);
-	ACTION_NAME_MAP_INSERT(IntegralPart);
-
-
-
-	ACTION_NAME_MAP_INSERT(GetVariable);
-	ACTION_NAME_MAP_INSERT(SetVariable);
+	ADD_ACTION_NAME(Pop);
+	ADD_ACTION_NAME(IntegralPart);
 
 
-	ACTION_NAME_MAP_INSERT(SetTarget2);
-	ACTION_NAME_MAP_INSERT(ConcatenateStrings);
-	ACTION_NAME_MAP_INSERT(GetProperty);
-	ACTION_NAME_MAP_INSERT(SetProperty);
-	ACTION_NAME_MAP_INSERT(DuplicateSprite);
-	ACTION_NAME_MAP_INSERT(RemoveSprite);
-	ACTION_NAME_MAP_INSERT(Trace);
-	ACTION_NAME_MAP_INSERT(StartDrag);
-	ACTION_NAME_MAP_INSERT(StopDrag);
-	ACTION_NAME_MAP_INSERT(StringLessThan);
-	ACTION_NAME_MAP_INSERT(Throw);
-	ACTION_NAME_MAP_INSERT(CastObject);
-	ACTION_NAME_MAP_INSERT(Implements);
-	ACTION_NAME_MAP_INSERT(FSCommand2);
+
+	ADD_ACTION_NAME(GetVariable);
+	ADD_ACTION_NAME(SetVariable);
 
 
-	ACTION_NAME_MAP_INSERT(Random);
-	ACTION_NAME_MAP_INSERT(WStringLength);
-	ACTION_NAME_MAP_INSERT(Ord);
-	ACTION_NAME_MAP_INSERT(Chr);
-	ACTION_NAME_MAP_INSERT(GetTimer);
-	ACTION_NAME_MAP_INSERT(WSubString);
-	ACTION_NAME_MAP_INSERT(WOrd);
-	ACTION_NAME_MAP_INSERT(WChr);
+	ADD_ACTION_NAME(SetTarget2);
+	ADD_ACTION_NAME(ConcatenateStrings);
+	ADD_ACTION_NAME(GetProperty);
+	ADD_ACTION_NAME(SetProperty);
+	ADD_ACTION_NAME(DuplicateSprite);
+	ADD_ACTION_NAME(RemoveSprite);
+	ADD_ACTION_NAME(Trace);
+	ADD_ACTION_NAME(StartDrag);
+	ADD_ACTION_NAME(StopDrag);
+	ADD_ACTION_NAME(StringLessThan);
+	ADD_ACTION_NAME(Throw);
+	ADD_ACTION_NAME(CastObject);
+	ADD_ACTION_NAME(Implements);
+	ADD_ACTION_NAME(FSCommand2);
 
 
-	ACTION_NAME_MAP_INSERT(Delete);
-	ACTION_NAME_MAP_INSERT(DeleteAll);
-	ACTION_NAME_MAP_INSERT(SetLocalVariable);
-	ACTION_NAME_MAP_INSERT(CallFunction);
-	ACTION_NAME_MAP_INSERT(Return);
-	ACTION_NAME_MAP_INSERT(Modulo);
-	ACTION_NAME_MAP_INSERT(New);
-	ACTION_NAME_MAP_INSERT(DeclareLocalVariable);
-	ACTION_NAME_MAP_INSERT(DeclareArray);
-	ACTION_NAME_MAP_INSERT(DeclareObject);
-	ACTION_NAME_MAP_INSERT(TypeOf);
-	ACTION_NAME_MAP_INSERT(GetTarget);
-	ACTION_NAME_MAP_INSERT(Enumerate);
-	ACTION_NAME_MAP_INSERT(TAdd);
-	ACTION_NAME_MAP_INSERT(TLessThan);
-	ACTION_NAME_MAP_INSERT(TEqual);
-	ACTION_NAME_MAP_INSERT(Number);
-	ACTION_NAME_MAP_INSERT(String);
-	ACTION_NAME_MAP_INSERT(Duplicate);
-	ACTION_NAME_MAP_INSERT(Swap);
-	ACTION_NAME_MAP_INSERT(GetMember);
-	ACTION_NAME_MAP_INSERT(SetMember);
-	ACTION_NAME_MAP_INSERT(Increment);
-	ACTION_NAME_MAP_INSERT(Decrement);
-	ACTION_NAME_MAP_INSERT(CallMethod);
-	ACTION_NAME_MAP_INSERT(NewMethod);
-	ACTION_NAME_MAP_INSERT(InstanceOf);
-	ACTION_NAME_MAP_INSERT(EnumerateObject);
+	ADD_ACTION_NAME(Random);
+	ADD_ACTION_NAME(WStringLength);
+	ADD_ACTION_NAME(Ord);
+	ADD_ACTION_NAME(Chr);
+	ADD_ACTION_NAME(GetTimer);
+	ADD_ACTION_NAME(WSubString);
+	ADD_ACTION_NAME(WOrd);
+	ADD_ACTION_NAME(WChr);
+
+
+	ADD_ACTION_NAME(Delete);
+	ADD_ACTION_NAME(DeleteAll);
+	ADD_ACTION_NAME(SetLocalVariable);
+	ADD_ACTION_NAME(CallFunction);
+	ADD_ACTION_NAME(Return);
+	ADD_ACTION_NAME(Modulo);
+	ADD_ACTION_NAME(New);
+	ADD_ACTION_NAME(DeclareLocalVariable);
+	ADD_ACTION_NAME(DeclareArray);
+	ADD_ACTION_NAME(DeclareObject);
+	ADD_ACTION_NAME(TypeOf);
+	ADD_ACTION_NAME(GetTarget);
+	ADD_ACTION_NAME(Enumerate);
+	ADD_ACTION_NAME(TAdd);
+	ADD_ACTION_NAME(TLessThan);
+	ADD_ACTION_NAME(TEqual);
+	ADD_ACTION_NAME(Number);
+	ADD_ACTION_NAME(String);
+	ADD_ACTION_NAME(Duplicate);
+	ADD_ACTION_NAME(Swap);
+	ADD_ACTION_NAME(GetMember);
+	ADD_ACTION_NAME(SetMember);
+	ADD_ACTION_NAME(Increment);
+	ADD_ACTION_NAME(Decrement);
+	ADD_ACTION_NAME(CallMethod);
+	ADD_ACTION_NAME(NewMethod);
+	ADD_ACTION_NAME(InstanceOf);
+	ADD_ACTION_NAME(EnumerateObject);
 	//0x56~0x5F
-	ACTION_NAME_MAP_INSERT(And);
-	ACTION_NAME_MAP_INSERT(Or);
-	ACTION_NAME_MAP_INSERT(Xor);
-	ACTION_NAME_MAP_INSERT(ShiftLeft);
-	ACTION_NAME_MAP_INSERT(ShiftRight);
-	ACTION_NAME_MAP_INSERT(ShiftRightUnsigned);
-	ACTION_NAME_MAP_INSERT(StrictEqual);
-	ACTION_NAME_MAP_INSERT(GreaterThan);
-	ACTION_NAME_MAP_INSERT(StringGreaterThan);
-	ACTION_NAME_MAP_INSERT(Extends);
+	ADD_ACTION_NAME(And);
+	ADD_ACTION_NAME(Or);
+	ADD_ACTION_NAME(Xor);
+	ADD_ACTION_NAME(ShiftLeft);
+	ADD_ACTION_NAME(ShiftRight);
+	ADD_ACTION_NAME(ShiftRightUnsigned);
+	ADD_ACTION_NAME(StrictEqual);
+	ADD_ACTION_NAME(GreaterThan);
+	ADD_ACTION_NAME(StringGreaterThan);
+	ADD_ACTION_NAME(Extends);
 	//0x70~0x7F
-	ACTION_NAME_MAP_INSERT(GotoFrame);
-	ACTION_NAME_MAP_INSERT(GetURL);
+	ADD_ACTION_NAME(GotoFrame);
+	ADD_ACTION_NAME(GetURL);
 
 
 
-	ACTION_NAME_MAP_INSERT(StoreRegister);
-	ACTION_NAME_MAP_INSERT(DeclareDictionary);
-	ACTION_NAME_MAP_INSERT(StrictMode);
-	ACTION_NAME_MAP_INSERT(WaitForFrame);
-	ACTION_NAME_MAP_INSERT(SetTarget);
-	ACTION_NAME_MAP_INSERT(GotoLabel);
-	ACTION_NAME_MAP_INSERT(WaitForFrame2);
-	ACTION_NAME_MAP_INSERT(DeclareFunction2);
-	ACTION_NAME_MAP_INSERT(Try);
+	ADD_ACTION_NAME(StoreRegister);
+	ADD_ACTION_NAME(DeclareDictionary);
+	ADD_ACTION_NAME(StrictMode);
+	ADD_ACTION_NAME(WaitForFrame);
+	ADD_ACTION_NAME(SetTarget);
+	ADD_ACTION_NAME(GotoLabel);
+	ADD_ACTION_NAME(WaitForFrame2);
+	ADD_ACTION_NAME(DeclareFunction2);
+	ADD_ACTION_NAME(Try);
 
 
 
 
-	ACTION_NAME_MAP_INSERT(With);
+	ADD_ACTION_NAME(With);
 
-	ACTION_NAME_MAP_INSERT(PushData);
+	ADD_ACTION_NAME(PushData);
 
 
-	ACTION_NAME_MAP_INSERT(BranchAlways);
-	ACTION_NAME_MAP_INSERT(GetURL2);
-	ACTION_NAME_MAP_INSERT(DeclareFunction);
+	ADD_ACTION_NAME(BranchAlways);
+	ADD_ACTION_NAME(GetURL2);
+	ADD_ACTION_NAME(DeclareFunction);
 
-	ACTION_NAME_MAP_INSERT(BranchIfTrue);
-	ACTION_NAME_MAP_INSERT(CallFrame);
-	ACTION_NAME_MAP_INSERT(GotoExpression );
-	//0xA0~0xFF
-    };
+	ADD_ACTION_NAME(BranchIfTrue);
+	ADD_ACTION_NAME(CallFrame);
+	ADD_ACTION_NAME(GotoExpression );
+
+	// 0xA0~0xFF
+    }
 };
 
 
 namespace DATATYPE {
     enum DataType {
-    // The following is all types accepted in the PushData action.
-    String			= 0x00, // v4: Push a string on the stack
+    // The following is all types accepted in the PushData action: v5
+    String			= 0x00,
+    // Push a string (literal) on the stack.
 
-    Float			= 0x01, // v4: Push a 32 bits IEEE floating
-    // point value on the stack. This type can be used to specify a Property
-    // reference.  Note that the property reference will be saved as a floating
-    // point value though only the integral part will be used. (32 bits) 
-
-    Null			= 0x02, // v5: Push a NULL on the stack (0?).
-    // (<none>)
-
-    Undefined			= 0x03, // v5: Push an undefined object on the
-    // stack. This is not a string, integer, float or boolean. It simply is an
-    // undefined element. Any operation on an undefined element yields
-    // undefined except an equal comparison (and some operations such as a
-    // Pop). (<none>)
-
-    Register			= 0x04, // v5: Push the content of the given
-    // register on the stack. You have only 4 registers available in
-    // SWF(number 0, 1, 2 and 3).  Since version 7 of SWF, it is possible to
-    // use up to 256 registers in a DeclareFunction (V7). However, outside
-    // such a function, the limit is the same. To set a register, use the
-    // StoreRegister action.
-
-    Boolean			= 0x05, // v5: Push a boolean value on the
-    // stack (f_boolean needs to be 0 or 1).
-
-    Double			= 0x06, // v5: An IEEE double value saved in a
-    // strange way. The following gives you the C code used to read these
-    // double values. (64 bits) 	
-    /*
-     *	    double	result;
-     *	    char	value[8];
-     *
-     *	    value[4] = ReadByte(input_stream);
-     *	    value[5] = ReadByte(input_stream);
-     *	    value[6] = ReadByte(input_stream);
-     *	    value[7] = ReadByte(input_stream);
-     *	    value[0] = ReadByte(input_stream);
-     *	    value[1] = ReadByte(input_stream);
-     *	    value[2] = ReadByte(input_stream);
-     *	    value[3] = ReadByte(input_stream);
-     *
-     *	    result = * (double *) value;
+    Float			= 0x01,
+    /* Push a 32 bits IEEE floating point value on the stack. This type can be
+     * used to specify a Property reference. Note that the property reference
+     * will be saved as a floating point value though only the integral part
+     * will be used. (literal)
      */
 
-    Integer			= 0x07, // v5: Push an integer on the stack.
+    Null			= 0x02,
+    /* Push NULL on the stack. This very looks like zero (0) except that it
+     * can be used as an object pointer. (<none>)
+     */
 
-    DictionaryLookup		= 0x08, // v5: Push a string as declared with
-    // a DeclareDictionary. The very first string in a dictionary has reference
-    // 0. There can only be up to 256 strings push with this instruction.
+    Undefined			= 0x03,
+    /* Push an undefined object on the stack. This is not a string, integer,
+     * float or Boolean. It simply is an undefined element. Any operation on
+     * an undefined element yields undefined except an equal comparison (and
+     * some operations such as a Pop). (<none>)
+     */
 
-    LargeDictionaryLookup	= 0x09, // v5: Push a string as declared with
-    // a Declare Dictionary action. The very first string in a dictionary has
-    // reference 0. There can be up to 65534 strings pushed this way.
-    // Note that the strings 0 to 255 should use the type 0x08 instead.
+    Register			= 0x04,
+    /* Push the content of the given register on the stack. In the main
+     * thread, you have 4 registers in SWF (number 0, 1, 2 and 3). Since SWF
+     * version 7, it is possible to use up to 256 registers in a
+     * DeclareFunction (V7). However, outside such a function, the limit is
+     * the same. To set a register, use the Store Register action.
+     */
+
+    Boolean			= 0x05,
+    // Push a Boolean value on the stack (needs to be 0 or 1).
+
+    Double			= 0x06,
+    /* An IEEE double value saved in a strange way. The following gives you
+     * the C code used to read these double values.
+     *
+     *	doubleresult;
+     *	charvalue[8];
+     *
+     *	value[4] = ReadByte(input_stream);
+     *	value[5] = ReadByte(input_stream);
+     *	value[6] = ReadByte(input_stream);
+     *	value[7] = ReadByte(input_stream);
+     *	value[0] = ReadByte(input_stream);
+     *	value[1] = ReadByte(input_stream);
+     *	value[2] = ReadByte(input_stream);
+     *	value[3] = ReadByte(input_stream);
+     *
+     *	result = *(double*)value;
+     */
+
+    Integer			= 0x07,
+    // Push an integer on the stack.
+
+    Constant8			= 0x08,
+    DictionaryLookup		= 0x08,
+    /* Push a string as declared with a DeclareDictionary action. The very
+     * first string in a dictionary has reference 0. There can only be up to
+     * 256 strings push with this instruction.
+     *
+     * Constant pool index
+     */
+
+    Constant16			= 0x09,
+    LargeDictionaryLookup	= 0x09,
+    /* Push a string as declared with a DeclareDictionary action. The very
+     * first string in a dictionary has reference 0. There can be up to 65534
+     * strings pushed this way. Note that the strings 0 to 255 should use the
+     * type 0x08 instead.
+     */
 };
 
 };
@@ -1156,40 +1265,71 @@ namespace DATATYPE {
 namespace PROPERTIE {
 
 enum Propertie {
-    PosX		=  0, // v4: the x coordinate in pixels (not TWIPs!)
-    PosY		=  1, // v4: the y coordinate in pixels (not TWIPs!)
-    ScaleX		=  2, // v4: the horizontal scaling factor in percent
-    // (50 -- NOT 0.5 -- represents half the normal size!!!)
-    ScaleY		=  3, // v4: the vertical scaling factor in percent
-    // (50 -- NOT 0.5 -- represents half the normal size!!!)
-    CurrentFrame	=  4, // v4: the frame being played; one can query the
-    // root current frame using an empty string ("") as the name of the object
-    NumberOfFrames	=  5, // v4: total number of frames in movie/sprite
-    Alpha		=  6, // v4: the alpha value in percent
-    // (50 -- NOT 0.5 -- means half transparent)
-    Visibility		=  7, // v4: whether the object is visible
-    Width		=  8, // v4: maximum width of the object
-    // (scales the object to that width)
-    Height		=  9, // v4: maximum height of the object
-    // (scales the object to that height)
-    Rotation		= 10, // v4: the rotation angle in degrees
-    Target		= 11, // v4: returns the name (full path) to an object;
-    // this can be viewed as a reference to that object
-    FramesLoaded	= 12, // v4: the number of frames already loaded
-    Name		= 13, // v4: the name of an object
-    DropTarget		= 14, // object over which this object was last dropped
-    URL			= 15, // v4: a URL linked to that object
-    HighQuality		= 16, // v4: whether we are in high quality mode
-    ShowFocusRectangle	= 17, // v4: whether the focus rectangle is visible
-    SoundBufferTime	= 18, // v4: what is currently being played sound wise
-    Quality		= 19, // v5: what the quality is (0, 1 or 2)
-    MouseX		= 20, // v5: the current horizontal position of the
-    // mouse pointer
-    MouseY		= 21, // v5: the current vertical position of the
-    // mouse pointer
-    WTHIT		= 16384, // v4: unnamed at this time; used in one case
-    // or another... well it seems this is a flick and has to do with the depth
-    // of sprites being duplicated
+    /* The following is the list of currently accepted properties or fields
+     * for the GetProperty and the SetProperty actions. Note that the
+     * properties can be specified with either an integer (type 7, requires
+     * V5.0+) or a single precision floating point (type 1, V4.0 compatible).
+     * And since strings are automatically transformed in a value when
+     * required, one can use a string to represent the property number (type
+     * 0). It works with a double value, I even tested a Boolean and null and
+     * it works. Obviously it isn't a good idea to use these. The default
+     * should be a single precision float. Please, see the Push Data action
+     * for more information about data types.
+     */
+
+    PosX		=  0,	// v4: x position in pixels (not TWIPs!)
+    PosY		=  1,	// v4: y position in pixels (not TWIPs!)
+    ScaleX		=  2,	// v4: horizontal scaling factor in percent
+    ScaleY		=  3,	// v4:   vertical scaling factor in percent
+    CurrentFrame	=  4,	// v4: the very frame being played
+    /* one can query the root current frame using an empty string ("") as the
+     * name of the object; note that the first current frame is number 1 and
+     * the last is equal to the total number of frames; on the other hand, the
+     * Goto instruction expects a frame number from 0 to the number of
+     * frames - 1
+     */
+
+    NumberOfFrames	=  5,
+    // v4: total number of frames in movie/sprite/thread
+
+    Alpha		=  6,	// v4: the alpha value in percent
+    Visibility		=  7,	// v4: whether the object is visible
+    Width		=  8,
+    // v4: maximum  width of the object (scales the object to that width)
+
+    Height		=  9,
+    // v4: maximum height of the object (scales the object to that height)
+
+    Rotation		= 10,	// v4: rotation angle in degrees
+    Target		= 11,
+    /* v4: return the name (full path) of an object; this can be viewed as a
+     * reference to that object
+     */
+
+    FramesLoaded	= 12,	// v4: number of frames already loaded
+    Name		= 13,	// v4: name of the object
+    DropTarget		= 14,
+    // v4: object over which this object was last dropped
+
+    URL			= 15,	// v4: URL linked to that object
+    HighQuality		= 16,	// v4: whether we are in high quality mode
+    ShowFocusRectangle	= 17,	// v4: whether the focus rectangle is visible
+    SoundBufferTime	= 18,
+    /* v4: position (or pointer) in the sound buffer; useful to synchronize
+     * the graphics to the music
+     */
+
+    Quality		= 19,
+    // v5: what the quality is (0 - Low, 1 - Medium or 2 - High)
+
+    MouseX		= 20,
+    // v5: current horizontal position of the mouse pointer within the window
+
+    MouseY		= 21,
+    // v5: current   vertical position of the mouse pointer within the window
+
+    Clone		= 16384,
+    // v4: this flag has to do with the depth of sprites being duplicated
 };
 
 };
@@ -1198,31 +1338,31 @@ enum Propertie {
 
 struct ColorObject {	// v5
     union { struct { uint8_t b, g, r, x; }; uint32_t cv; };	// 0xRRGGBB
-    //CXForm cxf;	// XXX
-    //void setCXForm(CXForm& cxf_) { return cxf = cxf_; };
-    //CXForm getCXForm() { return cxf; };
-    void setRGB(uint32_t c_) { cv = c_; };
-    uint32_t getRGB() { return cv; };
-    ColorObject(/*sprit target*/) { };
+    //CXForm cxf;	// XXX:
+    //void setCXForm(CXForm& cxf_) { return cxf = cxf_; }
+    //CXForm getCXForm() { return cxf; }
+    void setRGB(uint32_t c_) { cv = c_; }
+    uint32_t getRGB() { return cv; }
+    ColorObject(/*sprite target*/) { }
 };
 
 struct StringObject {
     std::string str;
     // int32_t len;
-    uint32_t charCodeAt(int32_t idx) { return str[idx]; };
-    StringObject charAt(int32_t idx) { return *this; };
+    uint32_t charCodeAt(int32_t idx) { return str[idx]; }
+    StringObject charAt(int32_t idx) { return *this; }
 
     // TODO:
-    StringObject concat(StringObject& so) { return *this; };
-    StringObject fromCharCode(int32_t c1, int32_t c2) { return *this; };
-    int32_t indexOf(StringObject& so, int32_t beg) { return 0; };
-    int32_t lastIndexOf(StringObject& so, int32_t beg) { return 0; };
-    StringObject slice(int32_t beg, int32_t end) { return *this; };
-    //std::vector<StringObject> split(StringObject& dl) { ...; };
-    StringObject substr(int32_t beg, int32_t len) { return *this; };
-    StringObject substring(int32_t p1, int32_t p2) { return *this; };
-    StringObject toLowerCase() { return *this; };
-    StringObject toUpperCase() { return *this; };
+    StringObject concat(StringObject& so) { return *this; }
+    StringObject fromCharCode(int32_t c1, int32_t c2) { return *this; }
+    int32_t indexOf(StringObject& so, int32_t beg) { return 0; }
+    int32_t lastIndexOf(StringObject& so, int32_t beg) { return 0; }
+    StringObject slice(int32_t beg, int32_t end) { return *this; }
+    //std::vector<StringObject> split(StringObject& dl) { ...; }
+    StringObject substr(int32_t beg, int32_t len) { return *this; }
+    StringObject substring(int32_t p1, int32_t p2) { return *this; }
+    StringObject toLowerCase() { return *this; }
+    StringObject toUpperCase() { return *this; }
 };
 
 struct MathObject {	// v5
@@ -1234,45 +1374,64 @@ struct MathObject {	// v5
     static const ull log2e   = CONST_LOG2_E;
     static const ull log10e  = CONST_LOG10_E;
     static const ull sqrt1_2 = CONST_1_SQRT2;
-    static ull abs(sll v) { return sll_abs(v); };
-    static sll ceil (sll v) { sll i = sllint(v); return (i + (i < v)); };
-    static sll floor(sll v) { sll i = sllint(v); return (i - (i < v)); };
-    static sll round(sll v) { return sllint((v += CONST_1_2)); };
-    static sll random() { return dbl2sll(random()); };
-    static sll atan (sll v) { return sllatan (v); };
-    static sll atan2(sll v) { return sllatan2(v); };
 
-    static sll acos(sll v) { return v; };   // TODO:
-    static sll asin(sll v) { return v; };   // TODO:
+    static ull abs(sll v) { return sll_abs(v); }
+    static sll ceil (sll v) { sll i = sllint(v); return (i + (i < v)); }
+    static sll floor(sll v) { sll i = sllint(v); return (i - (i < v)); }
+    static sll round(sll v) { return sllint((v += CONST_1_2)); }
+    static sll random() { return dbl2sll(random()); }
+    static sll atan (sll v) { return sllatan (v); }
+    static sll atan2(sll v) { return sllatan2(v); }
 
-    static sll cos(sll v) { return sllcos(v); };
-    static sll sin(sll v) { return sllsin(v); };
-    static sll tan(sll v) { return slltan(v); };
-    static sll exp(sll v) { return sllexp(v); };    // FIXME: -.5 <= v <= .5
-    static sll log(sll v) { return slllog(v); };
-    static sll sqrt(sll v) { return sllsqrt(v); };
-    static sll pow(sll x, sll y) { return sllpow(x, y); };
-    static sll min(sll a, sll b) { return ((a < b) ? a : b); };
-    static sll max(sll a, sll b) { return ((a < b) ? b : a); };
+    static sll acos(sll v) { return v; }	// TODO:
+    static sll asin(sll v) { return v; }	// TODO:
+
+    static sll cos(sll v) { return sllcos(v); }
+    static sll sin(sll v) { return sllsin(v); }
+    static sll tan(sll v) { return slltan(v); }
+    static sll exp(sll v) { return sllexp(v); } // FIXME: -.5 <= v <= .5
+    static sll log(sll v) { return slllog(v); }
+    static sll sqrt(sll v) { return sllsqrt(v); }
+    static sll pow(sll x, sll y) { return sllpow(x, y); }
+    static sll min(sll a, sll b) { return (a < b ? a : b); }
+    static sll max(sll a, sll b) { return (a < b ? b : a); }
 };
 
 struct Action {
-    union {	 uint8_t id;
-	struct { uint8_t i_:7, hasl:1; };
-    };  uint16_t size;
-    //std::vector<uint8_t> data;
-    uint8_t* data;
+    /* Action:
+     *
+     * Actions are an essential part of an interactive SWF file. Actions allow
+     * a file to react to events such as mouse movements or mouse clicks. The
+     * SWF 3 action model and earlier supports a simple action model. The SWF
+     * 4 action model supports a greatly enhanced action model that includes
+     * an expression evaluator, variables, and conditional branching and
+     * looping. The SWF 5 action model adds a JavaScript-style object model,
+     * data types, and functions.
+     */
 
     /* An action (or list of actions) can be triggered by a button state
-     * transition, or by a DoAction tag. The action is not executed
+     * transition, or by SWF 3 actions. The action is not executed
      * immediately, but is added to a list of actions to be processed. The
      * list is executed on a ShowFrame tag, or after the button state has
      * changed. An action can cause other actions to be triggered, in which
      * case, the action is added to the list of actions to be processed.
-     * Actions are processed until the action list is empty. 
+     * Actions are processed until the action list is empty.
+     *
+     * By default, Timeline actions such as Stop (see ActionStop), Play (see
+     * ActionPlay), and GoToFrame (see ActionGotoFrame) apply to files that
+     * contain them.  However, the SetTarget action (see ActionSetTarget),
+     * which is called Tell Target in the Adobe Flash user interface, can be
+     * used to send an action command to another file or sprite (see
+     * DefineSprite).
      */
 
-    ~Action() { delete[] data; };
+    union {	 uint8_t id;
+	struct { uint8_t i_:7, hasl:1; };
+    };
+    //std::vector<uint8_t> data;
+    uint16_t size; uint8_t* data;
+
+    ~Action() { delete[] data; }
 
     BitStream& load(BitStream& bs) {	size = 0;
 	off = bs.pos;			bs >> id;
@@ -1281,20 +1440,20 @@ struct Action {
 	    bs.read((char*)data, size);	//data.resize(size);
 	    //for (uint16_t i=0; i < size; ++i) bs >> data[i];
 	} else data = NULL;		return bs;
-    };
+    }
     uint32_t off;
 
     friend BitStream& operator>>(BitStream& bs, Action& ax)
-	    { return ax.load(bs); };
+	    { return ax.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, Action& ax) {
 	static ACTION::ActionNameTable anTbl;
 	ACTION::ActionNameTable::iterator it = anTbl.find(ax.id);
-	os  << "  0x" << std::setfill('0') << std::setw(2)
-	    << std::hex << (int)ax.id << std::dec //<< std::setfill(' ')
-	    << " - " << (it == anTbl.end() ? "UnknownAction" : it->second)
-	    << "(" << ax.size << "):";
+	os  << "  " << (it == anTbl.end() ? "UnknownAction" : it->second)
+	    << "/0x" << std::setfill('0') << std::hex << std::setw(2)
+	    << (int)ax.id << std::setfill(' ') << std::dec
+	    << ": \t+" << ax.size;
 	dump_data(os, ax.data, ax.size);	return os;
-    };
+    }
 };
 
 struct StackMachine {

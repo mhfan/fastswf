@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: swf.cpp        Thu, 06 Apr 2006 00:20:21 +0800  mhfan $ *
  *                                                              *
@@ -43,7 +43,8 @@ int SoundMixer::fd = -1;
 uint32_t Tag::size, Tag::tend;
 uint8_t FillStyleGradient::alpha;
 uint8_t TextEntry::gnb, TextEntry::anb;
-bool ShapeWithStyle::lots, ShapeWithStyle::hasa;//, ShapeWithStyle::news;
+bool ShapeWithStyle::lots, ShapeWithStyle::hasa;
+bool ShapeWithStyle::ls2;//, ShapeWithStyle::news;
 uint16_t ShapeRecordSetup::fcnt, ShapeRecordSetup::lcnt;
 int16_t Audio::obuf[Audio::OUTPUT_BUFFER_SIZE];
 #ifdef	ABSOLUTE_COORDINATE
@@ -59,7 +60,7 @@ struct jpeg_decompress_struct DefineBitsJPEG::jtbl;
 SoundStreamHead2* SoundStreamBlock::head;
 //SoundStreamBlock* SoundStreamBlock::last;
 #ifdef	NDEBUG
-uint16_t    DefineTag::id;	// XXX
+uint16_t    DefineTag::id;	// XXX:
 #endif
 Dictionary* DefineTag::di;
 FrameRender*DefineTag::fr;
@@ -73,12 +74,12 @@ struct FrameRenderTwin: public FrameRender {
     f32_16_t sx, sy;
     twin_pixmap_t* pixmap;
 
-    ~FrameRenderTwin() { twin_pixmap_destroy(pixmap); };
+    ~FrameRenderTwin() { twin_pixmap_destroy(pixmap); }
      FrameRenderTwin(uint16_t w = DEFAULT_SCREEN_WIDTH,
 		     uint16_t h = DEFAULT_SCREEN_HEIGHT) {
-	fb.viewport(0, 0, w, h, FrameBuffer::CENTER_MASK);	// XXX
+	fb.viewport(0, 0, w, h, FrameBuffer::CENTER_MASK);	// XXX:
 	// TODO: show boot splash?
-    };
+    }
 
     void SetViewport(Rect& br) {
 	twin_pointer_t pixels;
@@ -91,21 +92,22 @@ struct FrameRenderTwin: public FrameRender {
 	else sx = sx * fb.width / w, sy = sy * fb.height / h;
 
 	pixels.rgb16 = fb.pixl;
-	pixmap = twin_pixmap_create_const(TWIN_RGB16,   // XXX
+	pixmap = twin_pixmap_create_const(TWIN_RGB16,   // XXX:
 		fb.width, fb.height, fb.bpl, pixels);
 	pixmap->clip.left   = pixmap->clip.top = 0;
 	pixmap->clip.right  = pixmap->width;
 	pixmap->clip.bottom = pixmap->height;
-    };
+    }
 
     void SetBackgroundColor(RGB& rgb) {
 	twin_fill(pixmap, rgb, TWIN_OVER,
 		0, 0, pixmap->width, pixmap->height);
-    };
+    }
 
     void ShowShape(ShapeWithStyle* sws) {
-	ShapeRecordSetup* psr = NULL;
 	twin_path_t* path = twin_path_create();
+	ShapeRecordSetup* psr = NULL;
+
 	twin_path_move(path, 0, 0);
 	for (std::vector<ShapeRecord*>::iterator it = sws->srVec.begin();
 		it != sws->srVec.end(); ++it) {
@@ -122,20 +124,24 @@ struct FrameRenderTwin: public FrameRender {
 			    psr->anch.dy);
 		}
 	    } else {
-		if (psr && (psr->f0s || psr->f1s)) {
+		if (psr && (psr->f0s || psr->f1s)) {	// XXX:
 		    FillStyle* pfs = fsVec[psr->f0s];
+
 		    switch (pfs->type) {
 		    case FillStyle::SOLID:
 		    case FillStyle::GRADIENT_LINEAR:
 		    case FillStyle::GRADIENT_RADIAL:
-		    case FillStyle::BITMAP_TITLED_SMOOTH: 
+		    case FillStyle::BITMAP_TILLED_SMOOTH:
 		    case FillStyle::BITMAP_TILLED_HARD:
 		    case FillStyle::BITMAP_CLIPPED_HARD:
-		    case FillStyle::BITMAP_CLIPPED_SMOOTH: 
+		    case FillStyle::BITMAP_CLIPPED_SMOOTH:
+
 		    default: dtrace;
 		    }
+
 		    twin_fill_path(fr->pixmap, path, 0, 0);
 		}
+
 		psr = reinterpret_cast<ShapeRecordSetup    *>(*it);
 		if (psr->has_mv2) {
 		    twin_path_empty (path);
@@ -146,10 +152,10 @@ dtrace;
 		}
 	    }
 	}
-    };
+    }
 };
 
-Flash::Flash() { fr = new FrameRenderTwin (); };
+Flash::Flash() { fr = new FrameRenderTwin (); }
 
 #else// RENDER_CAIRO:
 
@@ -160,12 +166,12 @@ struct FrameRenderCairo: public FrameRender {
 
     ~FrameRenderCairo() {
 	cairo_surface_destroy(sf);	cairo_destroy(cr);
-    };
+    }
      FrameRenderCairo(uint16_t w = DEFAULT_SCREEN_WIDTH,
 		      uint16_t h = DEFAULT_SCREEN_HEIGHT) {
-	fb.viewport(0, 0, w, h, FrameBuffer::CENTER_MASK);	// XXX
+	fb.viewport(0, 0, w, h, FrameBuffer::CENTER_MASK);	// XXX:
 	// TODO: show boot splash?
-    };
+    }
 
     void SetViewport(Rect& br) {
 	cairo_format_t fmt;
@@ -187,7 +193,7 @@ struct FrameRenderCairo: public FrameRender {
 
 	cairo_scale(cr, 1.f * fb.width  / w / TWIPS
 		      , 1.f * fb.height / h / TWIPS);
-    };
+    }
 
     void SetBackgroundColor(RGB& rgb) {
 #ifndef	NORMALIZED_COLOR
@@ -196,7 +202,7 @@ struct FrameRenderCairo: public FrameRender {
 	cairo_set_source_rgb(cr, rgb.f.r, rgb.f.g, rgb.f.b);
 #endif
 	cairo_paint(cr);
-    };
+    }
 
     void DrawShape(ShapeWithStyle* sws, PlaceObject* pl) {
 	ShapeRecordSetup* psr = NULL;
@@ -251,7 +257,7 @@ struct FrameRenderCairo: public FrameRender {
 		if (psr) {
 		    if (psr->lns < (uint16_t)-1)
 			StrokePath(sws->lsVec[psr->lns]);
-		    if (psr->f1s < (uint16_t)-1)	// XXX
+		    if (psr->f1s < (uint16_t)-1)	// XXX:
 			FillRegion(sws->fsVec[psr->f1s]); else
 		    if (psr->f0s < (uint16_t)-1)
 			FillRegion(sws->fsVec[psr->f0s]);
@@ -274,17 +280,17 @@ struct FrameRenderCairo: public FrameRender {
 		cairo_clip(cr);
 	    }
 	}
-#endif/* comment by mhfan */
+#endif
 		
 		if (psr) {
 		    if (psr->lns < (uint16_t)-1)
 			StrokePath(sws->lsVec[psr->lns]);
-		    if (psr->f1s < (uint16_t)-1)	// XXX
+		    if (psr->f1s < (uint16_t)-1)	// XXX:
 			FillRegion(sws->fsVec[psr->f1s]); else
 		    if (psr->f0s < (uint16_t)-1)
 			FillRegion(sws->fsVec[psr->f0s]);
 		}
-    };
+    }
 
 private:
     void StrokePath(LineStyle& ls) {
@@ -297,7 +303,7 @@ private:
 				  ls.rgba.f.b, ls.rgba.f.a);
 #endif
 	cairo_stroke(cr);
-    };
+    }
 
     void FillRegion(FillStyle* pfs) {
 	switch (pfs->type) {
@@ -310,7 +316,7 @@ private:
 	     cairo_set_source_rgba(cr, rgba.f.r, rgba.f.g, rgba.f.b, rgba.f.a);
 #endif
 //cairo_clip(cr);
-	     cairo_fill(cr);	// XXX
+	     cairo_fill(cr);	// XXX:
 	}    return;
 
 	case FillStyle::GRADIENT_LINEAR:
@@ -337,13 +343,13 @@ private:
 
 	     cairo_matrix_t mx;
 #ifndef	CTM_FLOAT_POINT
-	     cairo_matrix_init(&mx, pg->mat.sx/65535.f, pg->mat.r1/65535.f
-				  , pg->mat.r1/65535.f, pg->mat.sy/65535.f
-				  , pg->mat.tx	      , pg->mat.ty);
+	     cairo_matrix_init(&mx, pg->mtx.sx/65535.f, pg->mtx.r1/65535.f
+				  , pg->mtx.r1/65535.f, pg->mtx.sy/65535.f
+				  , pg->mtx.tx	      , pg->mtx.ty);
 #else
-	     cairo_matrix_init(&mx, pg->mat.f.sx, pg->mat.f.r1
-				  , pg->mat.f.r1, pg->mat.f.sy
-				  , pg->mat.tx	, pg->mat.ty);
+	     cairo_matrix_init(&mx, pg->mtx.f.sx, pg->mtx.f.r1
+				  , pg->mtx.f.r1, pg->mtx.f.sy
+				  , pg->mtx.tx	, pg->mtx.ty);
 #endif
 
 	     cairo_matrix_scale(&mx, TWIPS, TWIPS);
@@ -360,7 +366,7 @@ private:
 	case FillStyle::BITMAP_TILLED_HARD:
 	case FillStyle::BITMAP_CLIPPED_HARD:
 
-	case FillStyle::BITMAP_TITLED_SMOOTH: 
+	case FillStyle::BITMAP_TILLED_SMOOTH:
 	case FillStyle::BITMAP_CLIPPED_SMOOTH: {    // FIXME: how to smooth?
 	     FillStyleBitmap* pb = reinterpret_cast<FillStyleBitmap*>(pfs);
 	     Dictionary::iterator it = DefineTag::di->find(pb->rfid);
@@ -374,7 +380,7 @@ private:
 	     case DefineBitsLossless::FMT_24BIT:
 		    fmt = CAIRO_FORMAT_RGB24;	    break;
 	     case DefineBitsLossless::FMT_16BIT:
-	     default: 
+	     default:
 		    fmt = CAIRO_FORMAT_RGB16_565;   break;
 	     }
 #endif
@@ -388,13 +394,13 @@ private:
 
 	     cairo_matrix_t mx;
 #ifndef	CTM_FLOAT_POINT
-	     cairo_matrix_init(&mx, pb->mat.sx/65535.f, pb->mat.r1/65535.f
-				  , pb->mat.r1/65535.f, pb->mat.sy/65535.f
-				  , pb->mat.tx	      , pb->mat.ty);
+	     cairo_matrix_init(&mx, pb->mtx.sx/65535.f, pb->mtx.r1/65535.f
+				  , pb->mtx.r1/65535.f, pb->mtx.sy/65535.f
+				  , pb->mtx.tx	      , pb->mtx.ty);
 #else
-	     cairo_matrix_init(&mx, pb->mat.f.sx, pb->mat.f.r1
-				  , pb->mat.f.r1, pb->mat.f.sy
-				  , pb->mat.tx	, pb->mat.ty);
+	     cairo_matrix_init(&mx, pb->mtx.f.sx, pb->mtx.f.r1
+				  , pb->mtx.f.r1, pb->mtx.f.sy
+				  , pb->mtx.tx	, pb->mtx.ty);
 #endif
 
 	     cairo_matrix_invert(&mx);
@@ -406,39 +412,42 @@ private:
 	     cairo_pattern_destroy(pt);
 	     cairo_surface_destroy(sf);
 	}    break;
+
 	default: dtrace;	return;
 	}
-    };
+    }
 };
 
 Flash::Flash() {
     fr = new FrameRenderCairo();
     sm = new SoundMixer();
-};
+}
 #endif//RENDER_TWIN
 
 bool Flash::open(const char* fn)
 {
-    enum {  MAX_SWF_VERSION		= 8u,
-	    EMBEDDED_SWF_ALIGNMENT	= 0x1000u,
-	    MAGIC_SIGNATURE_COMPRESSED  = 'SWC',
-	    MAGIC_SIGNATURE		= 'SWF',
-    };
+    enum { EMBEDDED_SWF_ALIGNMENT = 0x1000u, };	// XXX:
 
-    std::ios::sync_with_stdio(false);	// XXX
+    std::ios::sync_with_stdio(false);		// XXX:
 
     // TODO: read file by memory mapped io stream.
     fs.open(fn, std::ios::in | std::ios::binary);
-    while (fs.read((char*)fh._, sizeof(fh.__)) && 
-		//MAX_SWF_VERSION < fh.ver &&
-	    !(fh.mgc == MAGIC_SIGNATURE ||
-	      fh.mgc == MAGIC_SIGNATURE_COMPRESSED))
+
+    while (fs.read((char*)fh._, sizeof(fh._)) &&
+		//FileHeader::MAX_SWF_VERSION < fh.ver &&
+	    !(fh.mgc == FileHeader::MAGIC_SIGNATURE_SWF ||
+	      fh.mgc == FileHeader::MAGIC_SIGNATURE_SWC))
 	fs.ignore(EMBEDDED_SWF_ALIGNMENT - sizeof(fh.__));
 
+    // XXX: regarding endianess
     if (!fs.read((char*)&fh.len, sizeof(fh.len))) {
 	std::cerr << "\nInvalid SWF: " << fn << std::endl;
 					return false;
     }	bs.init(fs, (fh._[0] == 'C'));	bs.pos += sizeof(fh);
+
+#if	__BYTE_ORDER == __BIG_ENDIAN
+    fh.len = bswap_32(fh.len);	// XXX: le2ne_32()
+#endif
 
     std::cout.put('\n').put(fh._[2]).put(fh._[1]).put(fh._[0]).put('v')
 	    << fh.ver << " with" << std::setw(8)
@@ -459,56 +468,62 @@ bool Flash::open(const char* fn)
 
 void Flash::load(uint8_t ht)
 {
-    if (!(bs.pos < fh.len) || bs.eof()) return;  // XXX
-
-    do {
+  do {
 
     Tag t(bs), *pt;
-    Tag::tend = bs.pos + t.size;
+    if (bs.eof()/* && bs.pos < fh.len*/) break;
+
     switch (t.code) {
 #define	NEW_TAG_CASE(tag) \
     case TAG::CODE::tag:	pt = new tag(t, bs);	break
 
-    case TAG::CODE::End:		//NEW_TAG_CASE(End);
-	ControlTag::fl = &fl;		// XXX
-	pt = new End(t, bs);		ht = LOAD_BY_TAG; 	break;
-    case TAG::CODE::ShowFrame:		//NEW_TAG_CASE(ShowFrame);
-	pt = new ShowFrame(t, bs);	ht&=~LOAD_BY_FRAME; 	break;
+    //NEW_TAG_CASE(End);		//  0
+    case TAG::CODE::End:
+	ControlTag::fl = &fl;		// XXX:
+	pt = new End(t, bs);		ht  =  LOAD_BY_TAG; 	break;
+
+    //NEW_TAG_CASE(ShowFrame);
+    case TAG::CODE::ShowFrame:
+	pt = new ShowFrame(t, bs);	ht &= ~LOAD_BY_FRAME; 	break;
+
     NEW_TAG_CASE(DefineShape);
     NEW_TAG_CASE(FreeCharacter);
     NEW_TAG_CASE(PlaceObject);
-    NEW_TAG_CASE(RemoveObject);
+    NEW_TAG_CASE(RemoveObject);		//  5
     NEW_TAG_CASE(DefineBits);
     NEW_TAG_CASE(DefineButton);
     NEW_TAG_CASE(JPEGTables);
     NEW_TAG_CASE(SetBackgroundColor);
-    NEW_TAG_CASE(DefineFont);
+    NEW_TAG_CASE(DefineFont);		// 10
     NEW_TAG_CASE(DefineText);
     NEW_TAG_CASE(DoAction);
     NEW_TAG_CASE(DefineFontInfo);
     NEW_TAG_CASE(DefineSound);
-    NEW_TAG_CASE(StartSound);
+    NEW_TAG_CASE(StartSound);		// 15
     NEW_TAG_CASE(StopSound);
     NEW_TAG_CASE(DefineButtonSound);
     NEW_TAG_CASE(SoundStreamHead);
     NEW_TAG_CASE(SoundStreamBlock);
-    NEW_TAG_CASE(DefineBitsLossless);
+    NEW_TAG_CASE(DefineBitsLossless);	// 20
     NEW_TAG_CASE(DefineBitsJPEG2);
     NEW_TAG_CASE(DefineShape2);
     NEW_TAG_CASE(DefineButtonCXForm);
     NEW_TAG_CASE(Protect);
-    NEW_TAG_CASE(PathsArePostscript);
+    //NEW_TAG_CASE(PathsArePostscript);	// 25
     NEW_TAG_CASE(PlaceObject2);
-
+    //NEW_TAG_CASE(UnusedTag_27);
     NEW_TAG_CASE(RemoveObject2);
-    NEW_TAG_CASE(SyncFrame);
-
-    NEW_TAG_CASE(FreeAll);
+    //NEW_TAG_CASE(SyncFrame);
+    //NEW_TAG_CASE(UnusedTag_30);	// 30
+    //NEW_TAG_CASE(FreeAll);
     NEW_TAG_CASE(DefineShape3);
     NEW_TAG_CASE(DefineText2);
     NEW_TAG_CASE(DefineButton2);
-    NEW_TAG_CASE(DefineBitsJPEG3);
+    NEW_TAG_CASE(DefineBitsJPEG3);	// 35
     NEW_TAG_CASE(DefineBitsLossless2);
+    NEW_TAG_CASE(DefineEditText);
+    //NEW_TAG_CASE(DefineVideo);
+
     //NEW_TAG_CASE(DefineSprite);
     case TAG::CODE::DefineSprite: {
 	DefineSprite* sp = new DefineSprite(t, bs);
@@ -516,55 +531,77 @@ void Flash::load(uint8_t ht)
 	load(ht);   pt =  sp;
 	Tag::tend = bs.pos;
     }	break;
-    NEW_TAG_CASE(NameCharacter);
-    NEW_TAG_CASE(ProductInfo);
-    NEW_TAG_CASE(DefineTextFormat);
-    NEW_TAG_CASE(FrameLabel);
 
-    NEW_TAG_CASE(SoundStreamHead2);
+    //NEW_TAG_CASE(NameCharacter);	// 40
+    //NEW_TAG_CASE(ProductInfo);
+    //NEW_TAG_CASE(DefineTextFormat);
+    NEW_TAG_CASE(FrameLabel);
+    //NEW_TAG_CASE(UnusedTag_44);
+    NEW_TAG_CASE(SoundStreamHead2);	// 45
     NEW_TAG_CASE(DefineMorphShape);
-    NEW_TAG_CASE(GenerateFrame);
+    //NEW_TAG_CASE(GenerateFrame);
     NEW_TAG_CASE(DefineFont2);
     NEW_TAG_CASE(GeneratorCommand);
-    NEW_TAG_CASE(DefineEditText);
-    NEW_TAG_CASE(DefineVideo);
-    NEW_TAG_CASE(DefineCommandObject);
-    NEW_TAG_CASE(CharacterSet);
-    NEW_TAG_CASE(ExternalFont);
-
-
-
+    //NEW_TAG_CASE(DefineCommandObject);	// 50
+    //NEW_TAG_CASE(CharacterSet);
+    //NEW_TAG_CASE(ExternalFont);
+    //NEW_TAG_CASE(UnusedTag_53);
+    //NEW_TAG_CASE(UnusedTag_54);
+    //NEW_TAG_CASE(UnusedTag_55);	// 55
     NEW_TAG_CASE(ExportAssets);
     NEW_TAG_CASE(ImportAssets);
     NEW_TAG_CASE(ProtectDebug);
     NEW_TAG_CASE(DoInitAction);
-    NEW_TAG_CASE(DefineVideoStream);
+    NEW_TAG_CASE(DefineVideoStream);	// 60
     NEW_TAG_CASE(VideoFrame);
     NEW_TAG_CASE(DefineFontInfo2);
-
+    //NEW_TAG_CASE(DebugID);
     NEW_TAG_CASE(ProtectDebug2);
-    NEW_TAG_CASE(ScriptLimits);
+    NEW_TAG_CASE(ScriptLimits);		// 65
     NEW_TAG_CASE(SetTabIndex);
+    //NEW_TAG_CASE(UnusedTag_67);
+    //NEW_TAG_CASE(UnusedTag_68);
+    NEW_TAG_CASE(FileAttributes);
+    NEW_TAG_CASE(PlaceObject3);		// 70
+    NEW_TAG_CASE(ImportAssets2);
+    //NEW_TAG_CASE(DoABCAction);
+    NEW_TAG_CASE(DefineFontAlignZones);
+    NEW_TAG_CASE(CSMTextSettings);
+    NEW_TAG_CASE(DefineFont3);		// 75
+    NEW_TAG_CASE(SymbolClass);
+    NEW_TAG_CASE(Metadata);
+    NEW_TAG_CASE(DefineScalingGrid);
+    //NEW_TAG_CASE(UnusedTag_79);
+    //NEW_TAG_CASE(UnusedTag_80);		// 80
+    //NEW_TAG_CASE(UnusedTag_81);
+    NEW_TAG_CASE(DoABC);
+    NEW_TAG_CASE(DefineShape4);
+    NEW_TAG_CASE(DefineMorphShape2);
+    //NEW_TAG_CASE(UnusedTag_85);		// 85
+    NEW_TAG_CASE(DefineSceneAndFrameLabelData);
+    NEW_TAG_CASE(DefineBinaryData);
+    NEW_TAG_CASE(DefineFontName);
+    NEW_TAG_CASE(StartSound2);
+    NEW_TAG_CASE(DefineBitsJPEG4);	// 90
+    NEW_TAG_CASE(DefineFont4);
 
-
-
-    NEW_TAG_CASE(PlaceObject3);
     // ...
-    NEW_TAG_CASE(DefineBitsPtr);
+    NEW_TAG_CASE(DefineBitsPtr);	// 1023
     default:		pt = new TagUnknown(t, bs);		break;
     }			ts.push_back(pt);
 
-    pt->dump(std::clog);	// XXX
+    pt->dump(std::clog);	// XXX:
     if (Tag::tend != bs.pos) {
 #ifndef	NDEBUG
-	pt->dump(std::clog);
-#endif//NDEBUG
-	std::clog << "Unexpected tag end: "
-		  << bs.pos << "(" << Tag::tend << ")\n";
+	//pt->dump(std::clog);
+#endif
+	std::clog << "Unexpected tag end: " << std::setfill('0') << std::hex
+		  << std::setw(8) << bs.pos << "("
+		  << std::setw(8) << Tag::tend << ")\n";
 	bs.ignore(Tag::tend - bs.pos);	// FIXME: bs.seekg(Tag::tend);
     }
 
-    } while (ht && !bs.eof() && bs.pos < fh.len);
+  } while (ht);
 }
 
 void Flash::play(uint8_t flag, int8_t sp)
@@ -573,15 +610,16 @@ void Flash::play(uint8_t flag, int8_t sp)
 
     if (sp < 0) ft /= -sp; else ft *= sp;
 
-    for (; !(flag & PLAY_ONCE) || fl.pf < mh.fc; ct += ft) {
+    for (; !(flag & PLAY_ONCE) || (!bs.eof() || fl.pf < mh.fc); ct += ft) {
 	while (!(fl.pf < fl.lf)) load(LOAD_BY_FRAME);
 
 	advf();			// TODO: handle events here
 
-	while (tl.fresh() < ct && fl.lf < mh.fc) load(LOAD_BY_TAG);
-//	tl.delay(ct);		// XXX
+	while (tl.fresh() < ct && (!bs.eof() || fl.lf < mh.fc))
+	    load(LOAD_BY_TAG);
+//	tl.delay(ct);		// XXX:
 
-//	dump(std::clog);	// XXX
+//	dump(std::clog);	// XXX:
 	show();			// TODO: skip frame regarding A-V sync
     }
 }

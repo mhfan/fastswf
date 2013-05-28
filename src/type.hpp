@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: type.hpp       Wed, 05 Apr 2006 14:25:54 +0800  mhfan $ *
  *                                                              *
@@ -54,14 +54,14 @@ const uint8_t TWIPS = (0x01 <<  TWIPS_SHIFT);
 
 static inline int32_t twips2pixels(int32_t twips) {
     return  ((twips + (0x01 << (TWIPS_SHIFT - 1))) >> TWIPS_SHIFT);
-};
+}
 
 #define	TWIPS2PIXELS(twips) \
     (twips + (0x01 << (TWIPS_SHIFT - 1)) >> TWIPS_SHIFT)
 
 static inline int32_t pixels2twips(int32_t pixels) {
     return (pixels << TWIPS_SHIFT);
-};
+}
 
 #define	PIXELS2TWIPS(pixels)		(pixels << TWIPS_SHIFT)
 
@@ -71,13 +71,13 @@ const uint8_t TWIPS = 20u;
 
 static inline int32_t twips2pixels(int32_t twips) {
     return ((twips + (TWIPS >> 1)) / TWIPS);
-};
+}
 
 #define	TWIPS2PIXELS(twips)		((twips + (TWIPS >> 1)) / TWIPS)
 
 static inline int32_t pixels2twips(int32_t pixels) {
     return (pixels * TWIPS);
-};
+}
 
 #define	PIXELS2TWIPS(pixels)		(pixels * TWIPS)
 
@@ -86,26 +86,26 @@ static inline int32_t pixels2twips(int32_t pixels) {
 #if 0
 static inline float twips2pixels(int32_t twips) {
     return  ((float)twips / TWIPS);
-};
+}
 #endif
 
 #if 0
 struct Pixel {
-    Pixel(int32_t val): pixels(val) { };
-    int32_t topixels() { return (pixels * TWIPS); };
-    operator Twip() { return totwips(); };
-    operator int32_t() { return pixels; };
+    Pixel(int32_t val): pixels(val) { }
+    int32_t topixels() { return (pixels * TWIPS); }
+    operator Twip() { return totwips(); }
+    operator int32_t() { return pixels; }
 
 private:
     int32_t pixels;
 };
 
 struct Twip {
-    Twip(int32_t val): twips(val) { };
-    float   topixels() { return (float)twips / TWIPS; };
-    int32_t topixels() { return ((twips + (TWIPS >> 1)) / TWIPS); };
-    operator Pixel() { return topixels(); };
-    operator int32_t() { return twips; };
+    Twip(int32_t val): twips(val) { }
+    float   topixels() { return (float)twips / TWIPS; }
+    int32_t topixels() { return ((twips + (TWIPS >> 1)) / TWIPS); }
+    operator Pixel() { return topixels(); }
+    operator int32_t() { return twips; }
 
 private:
     int32_t twips;
@@ -115,7 +115,7 @@ struct Point {
     union {
 	struct { Twip x, y; };
 	int32_t _[2];
-    };  Point(int32_t x_, int32_t y_): x(x_), y(y_) { };
+    };  Point(int32_t x_, int32_t y_): x(x_), y(y_) { }
 };
 #else
 typedef int32_t Twip;
@@ -173,14 +173,36 @@ typedef f16_8_t  FIXED8;
  * floating-point types. Three types of floating-point numbers are supported.
  */
 
-typedef double  DOUBLE;
-typedef float   FLOAT;
+//typedef double  DOUBLE;
+struct DOUBLE {
+    union {	  double d;
+	struct { uint64_t mantissa:52, exponent:11, sign:1; };
+    };
+};
+
+//typedef float   FLOAT;
+struct FLOAT {
+    union {	  float f;
+	struct { uint32_t mantissa:23, exponent:8, sign:1; };
+    };
+};
+
 struct FLOAT16 {
     /* FLOAT16 is identical to the characteristics of FLOAT except for changes
      * to the number of bits allocated to the exponent and mantissa:
      *  -  1 bit  for the sign
      *  -  5 bits for the exponent, with an exponent bias of 16
      *  - 10 bits for the mantissa
+     *
+     * FLOAT:
+     *  -  1 bit  for the sign
+     *  -  8 bits for the exponent
+     *  - 23 bits for the mantissa
+     *
+     * DOUBLE:
+     *  -  1 bit  for the sign
+     *  - 11 bits for the exponent
+     *  - 52 bits for the mantissa
      */
     union {	  int16_t _;	float f;
 	struct { uint16_t mantissa:10, exponent:5, sign:1; };
@@ -189,6 +211,8 @@ struct FLOAT16 {
     BitStream& load(BitStream& bs) {
 	return bs;
     }
+
+    operator float() const { return f; }
     // TODO: convert to float?
 };
 
@@ -207,10 +231,10 @@ struct FLOAT16 {
  */
 
 struct EncodedU32 {
-    uint32_t v;
+    UI32 v;
 
     BitStream& load(BitStream& bs) {
-	uint8_t b;	      bs >> b, v  = b;
+	UI8 b;	      bs >> b, v  = b;
 	if (v & (0x01 <<  7)) bs >> b, v |= b <<  7; else return bs;
 	if (v & (0x01 << 14)) bs >> b, v |= b << 14; else return bs;
 	if (v & (0x01 << 21)) bs >> b, v |= b << 21; else return bs;
@@ -218,7 +242,7 @@ struct EncodedU32 {
     }
 
     friend BitStream& operator>>(BitStream& bs, EncodedU32& eu32)
-	    { return eu32.load(bs); };
+	    { return eu32.load(bs); }
 };
 
 /* Bit values:
@@ -302,17 +326,17 @@ struct Rect {
 	    Twip x0, x1, y0, y1;	//:nbits;
 	};  int32_t __[4];
 	    int32_t _[2][2];	// [[x0 x1], [y0 y1]]
-	//struct { struct Point tlp, brp; }; 
+	//struct { struct Point tlp, brp; };
 	//struct { Twip Xmin, Xmax, Ymin, Ymax; };
 	//int32_t _[2][2];		// [[tlp.x tlp.y], [brp.x brp.y]]
     };
 
-    //Rect(Rect& r): x0(r.x0), x1(r.x1), y0(r.y0), y1(r.y1) {};
+    //Rect(Rect& r): x0(r.x0), x1(r.x1), y0(r.y0), y1(r.y1) {}
 
-    //Point tlp() const { return Point(x0, y0); };
-    //Point brp() const { return Point(x1, y1); };
-    Twip width () const { return abs(x1 - x0); };
-    Twip height() const { return abs(y1 - y0); };
+    //Point tlp() const { return Point(x0, y0); }
+    //Point brp() const { return Point(x1, y1); }
+    Twip width () const { return abs(x1 - x0); }
+    Twip height() const { return abs(y1 - y0); }
 
     BitStream& load(BitStream& bs) {
 	uint8_t nbits = NBITS;		bs.align();
@@ -321,14 +345,14 @@ struct Rect {
 	__[1] = bs.read(nbits, SIGNED);
 	__[2] = bs.read(nbits, SIGNED);
 	__[3] = bs.read(nbits, SIGNED);	return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, Rect& r)
-	    { return r.load(bs); };
+	    { return r.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, const Rect& r) {
 	return (os  << "[" << r.x0 << " " << r.y0 << "; "
 		    << r.x1 << " " << r.y1 << "]");
-    };
+    }
 };
 
 struct Matrix {
@@ -352,12 +376,12 @@ struct Matrix {
 	union {	int32_t __[4];	//int32_t _[2][2];
 	    struct {
 		//uint32_t has_scale:1,	snbit:SNBIT;
-		f32_16_t sx, sy;	   //:snbit;
+		FIXED sx, sy;	   //:snbit;
 		//uint32_t has_rotat:1,	rnbit:RNBIT;
-		f32_16_t r0, r1;	   //:rnbit;
+		FIXED r0, r1;	   //:rnbit;
 	    };
 
-	    struct { f32_16_t xx, yy, yx, xy; };
+	    struct { FIXED xx, yy, yx, xy; };
 #ifdef	CTM_FLOAT_POINT
 	    struct { float    xx, yy, yx, xy; } f; float _f[4];
 #endif
@@ -371,7 +395,7 @@ struct Matrix {
     };
 
     //Matrix(Matrix& m): sx(m.sx), sy(m.sy), r0(m.r0),
-    //		    r1(m.r1), tx(m.tx), ty(m.ty) { };
+    //		    r1(m.r1), tx(m.tx), ty(m.ty) { }
 
 #ifdef	FIXED_POINT
     Matrix& concatenate(Matrix& m) {
@@ -381,11 +405,11 @@ struct Matrix {
 	r0 = ((r0_ * m.sy + sx_ * m.r0 + 0x8000) >> 16);
 	sy = ((sy_ * m.sy + r1_ * m.r0 + 0x8000) >> 16);
 	m.transform(tx, ty);		return *this;
-    };
+    }
 
     Matrix& invert() {
-	f32_16_t det = ((f64_32_t)sx * sy -
-			(f64_32_t)r0 * r1 + 0x8000) >> 16;
+	FIXED det = ((f64_32_t)sx * sy -
+		     (f64_32_t)r0 * r1 + 0x8000) >> 16;
 	if (det == 0) sx = sy = r0 = r1 = ~0ul; else {	// XXX:
 	    f64_32_t sx_ = sx, sy_ = sy, r0_ = r0, r1_ = r1;
 	    sx =  ((r1_ << 16) + (det >> 1)) / det;
@@ -393,16 +417,16 @@ struct Matrix {
 	    r0 = -((r0_ << 16) + (det >> 1)) / det;
 	    r1 =  ((sx_ << 16) + (det >> 1)) / det;
 	}				return *this;
-    };
+    }
 
-    Matrix& operator*(Matrix& m) {	return concatenate(m); };
+    Matrix& operator*(Matrix& m) {	return concatenate(m); }
 
-    //Matrix& transform(Point& p) {	return transform(p.x, p.y); };
+    //Matrix& transform(Point& p) {	return transform(p.x, p.y); }
     Matrix& transform(int32_t& x, int32_t& y) {
 	f64_32_t x_ = x, y_ = y;
 	x = ((x_ * sx + y_ * r1 + 0x8000) >> 16) + tx;
 	y = ((x_ * r0 + y_ * sy + 0x8000) >> 16) + ty;	return *this;
-    };
+    }
 #endif
 
     BitStream& load(BitStream& bs) {	uint8_t nbit;	bs.align();
@@ -420,19 +444,19 @@ struct Matrix {
 	_f[1] = __[1] / 65535.f, _f[0] = __[0] / 65535.f;
 #endif
 	return bs;
-    };
+    }
 
-    static const f32_16_t DEFAULT_SCALE     = (0x01 << 16);
-    static const f32_16_t DEFAULT_ROTATE    = 0x000000;
-    static const int32_t  DEFAULT_TRANSLATE = 0x000000;
+    static const FIXED	 DEFAULT_SCALE     = (0x01 << 16);
+    static const FIXED	 DEFAULT_ROTATE    = 0x000000;
+    static const int32_t DEFAULT_TRANSLATE = 0x000000;
 
-    friend BitStream& operator>>(BitStream& bs, Matrix& mat)
-	    { return mat.load(bs); };
+    friend BitStream& operator>>(BitStream& bs, Matrix& mtx)
+	    { return mtx.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, const Matrix& m) {
 	return (os  << "[" << m.sx << " " << m.sy << "; "
 			   << m.r0 << " " << m.r1 << "; "
 			   << m.tx << " " << m.ty << "]");
-    };
+    }
 };
 
 struct __attribute__((packed)) RGB {
@@ -449,35 +473,32 @@ struct __attribute__((packed)) RGB {
     };
 
 #if 0
-    RGB() { };
+    RGB() { }
     RGB(uint32_t c) {
 	b = (c & 0xff);
 	g = ((c >>  8) & 0xff);
 	r = ((c >> 16) & 0xff);
-    };
-    RGB(RGB& c): r(c.r), g(c.g), b(c.b) { };
+    }
+    RGB(RGB& c): r(c.r), g(c.g), b(c.b) { }
 #endif
 
-#if 0
-    BitStream& load(BitStream& bs) { return (bs >> r >> g >> b); };
-#else
     BitStream& load(BitStream& bs) {
+	//return (bs >> r >> g >> b);
 	bs.read((char*)_, 3);
 #ifdef	NORMALIZED_COLOR
 	_f[2] = _[2] / 255.f, _f[1] = _[1] / 255.f, _f[0] = _[0] / 255.f;
 #endif
 	return bs;
-    };
-#endif
+    }
 
     operator uint32_t() {
 	return ((0xff << 24) | ((uint32_t)r << 16) | ((uint32_t)g << 8) | b);
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, RGB& rgb)
-	    { return rgb.load(bs); };
+	    { return rgb.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, const RGB& c) {
-	return (os  << "#" << std::setw(8) << std::setfill('0') << std::hex  
+	return (os  << "#" << std::setw(8) << std::setfill('0') << std::hex
 		    << (((uint32_t)c.r << 24) | ((uint32_t)c.g << 16) |
 			((uint32_t)c.b <<  8) | 0xff) << std::setfill(' ')
 		    << std::dec << " [" << (int)c.r << " "
@@ -498,29 +519,26 @@ struct RGBA {
     };
 
 #if 0
-    RGBA(RGB&  c): r(c.r), g(c.g), b(c.b), a(0xff) { };
-    RGBA(RGBA& c): r(c.r), g(c.g), b(c.b), a(c.a ) { };
-    RGBA(XRGB& c): r(c.r), g(c.g), b(c.b), a(0xff) { };
-    RGBA(ARGB& c) { r = c.r, g = c.g, b = c.b, a = c.a ; };   // XXX:
+    RGBA(RGB&  c): r(c.r), g(c.g), b(c.b), a(0xff) { }
+    RGBA(RGBA& c): r(c.r), g(c.g), b(c.b), a(c.a ) { }
+    RGBA(XRGB& c): r(c.r), g(c.g), b(c.b), a(0xff) { }
+    RGBA(ARGB& c) { r = c.r, g = c.g, b = c.b, a = c.a ; }	// XXX:
 #endif
 
-#if 0
-    BitStream& load(BitStream& bs) { return (bs >> r >> g >> b >> a); };
-#else
     BitStream& load(BitStream& bs) {
+	//return (bs >> r >> g >> b >> a);
 	bs.read((char*)_, 4);
 #ifdef	NORMALIZED_COLOR
 	_f[3] = _[3] / 255.f, _f[2] = _[2] / 255.f,
 	_f[1] = _[1] / 255.f, _f[0] = _[0] / 255.f;
 #endif
 	return bs;
-    };
-#endif
+    }
 
-    operator uint32_t() { return __; };
+    operator uint32_t() { return __; }
 
     friend BitStream& operator>>(BitStream& bs, RGBA& rgba)
-	    { return rgba.load(bs); };
+	    { return rgba.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, const RGBA& c) {
 	return (os  << "#"  << std::hex << std::setfill('0') << std::setw(8)
 		    << c.__ << std::dec << std::setfill(' ') << " ["
@@ -541,26 +559,23 @@ struct ARGB {
 #endif
     };
 
-    //ARGB(RGB&  c): a(0xff), r(c.r), g(c.g), b(c.b) { };
-    //ARGB(RGBA& c) { a = c.a , r = c.r, g = c.g, b = c.b; };   // XXX
+    //ARGB(RGB&  c): a(0xff), r(c.r), g(c.g), b(c.b) { }
+    //ARGB(RGBA& c) { a = c.a , r = c.r, g = c.g, b = c.b; }	// XXX:
 
-#if 0
-    BitStream& load(BitStream& bs) { return (bs >> a >> r >> g >> b); };
-#else
     BitStream& load(BitStream& bs) {
+	//return (bs >> a >> r >> g >> b);
 	bs.read((char*)_, 4);
 #ifdef	NORMALIZED_COLOR
 	_f[3] = _[3] / 255.f, _f[2] = _[2] / 255.f,
 	_f[1] = _[1] / 255.f, _f[0] = _[0] / 255.f;
 #endif
 	return bs;
-    };
-#endif
+    }
 
-    operator uint32_t() { return __; };
+    operator uint32_t() { return __; }
 
     friend BitStream& operator>>(BitStream& bs, ARGB& argb)
-	    { return argb.load(bs); };
+	    { return argb.load(bs); }
 };
 
 struct XRGB {
@@ -575,12 +590,8 @@ struct XRGB {
 #endif
     };
 
-#if 0
     BitStream& load(BitStream& bs) {
-	bs >> x;    x = 0xff;		return (bs >> r >> g >> b);
-    };
-#else
-    BitStream& load(BitStream& bs) {
+	//bs >> x;    x = 0xff;		return (bs >> r >> g >> b);
 	bs.read((char*)_, 4);		x = 0xff;
 #ifdef	NORMALIZED_COLOR
 	_f[3] = _[3] / 255.f, _f[2] = _[2] / 255.f,
@@ -588,12 +599,11 @@ struct XRGB {
 #endif
 	return bs;
     }
-#endif
 
-    operator uint32_t() { return __; };
+    operator uint32_t() { return __; }
 
     friend BitStream& operator>>(BitStream& bs, XRGB& xrgb)
-	    { return xrgb.load(bs); };
+	    { return xrgb.load(bs); }
 };
 
 struct CXForm {
@@ -601,7 +611,7 @@ struct CXForm {
 
     struct {	//uint8_t has_add:1, has_mul:1, nbit:NBIT;
 	union {	     int16_t _[4];
-	    struct { f16_8_t mr, mg, mb, ma; };
+	    struct { FIXED8 mr, mg, mb, ma; };
 #if 0//def	FLOAT_POINT
 	    struct { float mr, mg, mb, ma; } f; float _f[4];
 #endif
@@ -614,8 +624,8 @@ struct CXForm {
 	};
     };
 
-    CXForm(): ma(DEFAULT_MUL), aa(DEFAULT_ADD) { };
-    //CXForm(int): ma(SHRT_MAX), aa(CHAR_MAX) { };
+    CXForm(): ma(DEFAULT_MUL), aa(DEFAULT_ADD) { }
+    //CXForm(int): ma(SHRT_MAX), aa(CHAR_MAX) { }
 
     // C' = max(0, min((C * mc + 128) / 256 + ac, 255))
     // C' = clamp((C * mc + 128) / 256 + ac, 0, 255)
@@ -630,7 +640,7 @@ struct CXForm {
 	c.b = std::max(0, std::min(((c.b * mb + 0x80) >> 8) + ab, 0xff));
 #endif
 	return *this;
-    };
+    }
 
     CXForm& transform(RGBA& c) {
 #ifdef	NORMALIZED_COLOR
@@ -645,7 +655,7 @@ struct CXForm {
 	c.a = std::max(0, std::min(((c.a * ma + 0x80) >> 8) + aa, 0xff));
 #endif
 	return *this;
-    };
+    }
 
     BitStream& load(BitStream& bs) {	bs.align();
 #if 0
@@ -684,124 +694,101 @@ struct CXForm {
 #endif
 
 	return bs;
-    };
+    }
 
     static const int16_t DEFAULT_MUL = (0x01 << 8);
     static const int16_t DEFAULT_ADD =  0x0000;
 
     friend BitStream& operator>>(BitStream& bs, CXForm& cxf)
-	    { return cxf.load(bs); };
+	    { return cxf.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, const CXForm& f) {
 	return (os  << "[" << f.mr << " "  << f.mg << " " << f.mb
 		    << " " << f.ma << "; " << (int)f.ar << " " << (int)f.ag
 		    << " " << (int)f.ab << " "  << (int)f.aa << "]");
-    };
+    }
 };
 
 struct FillStyle {
     enum {
-	SOLID = 0x00, GRADIENT_LINEAR = 0x10, GRADIENT_RADIAL = 0x12,
-	BITMAP_TITLED_SMOOTH = 0x40, BITMAP_CLIPPED_SMOOTH,
+	SOLID = 0x00, GRADIENT_LINEAR = 0x10,
+	GRADIENT_RADIAL = 0x12, GRADIENT_RADIAL_FOCAL,
+	BITMAP_TILLED_SMOOTH = 0x40, BITMAP_CLIPPED_SMOOTH,
 	BITMAP_TILLED_HARD, BITMAP_CLIPPED_HARD,
+	BITMAP_TILLED = 0x40, BITMAP_CLIPPED,
+
+	Solid = 0x00, LinearGradient = 0x10,
+	RadialGradient = 0x12, FocalRadialGradient,
+	RepeatingBitmap = 0x40, ClippedBitmap,
+	HardRepeatingBitmap, HardClippedBitmap,
+	TilledBitmap = 0x40, HardTilledBitmap = 0x42,
     };
 
     uint8_t type;
 
-    FillStyle() { };
-    FillStyle(uint8_t t): type(t) { };
+    FillStyle() { }
+    FillStyle(uint8_t t): type(t) { }
 
-    virtual ~FillStyle() { };
+    virtual ~FillStyle() { }
+
+    friend BitStream& operator>>(BitStream& bs, FillStyle& fs);
+    friend std::ostream& operator<<(std::ostream& os, FillStyle& fs);
 };
-
-#if 0 
-struct FillStyleSolid2: public FillStyle {	RGB rgb;
-    FillStyleSolid2(uint8_t t) { type = t; };
-
-    BitStream& load(BitStream& bs) { return (bs >> rgb); };
-
-    friend BitStream& operator>>(BitStream& bs, FillStyleSolid2& fss)
-	    { return fss.load(bs); };
-};
-#endif
 
 struct FillStyleSolid: public FillStyle {	RGBA rgba;
     FillStyleSolid(uint8_t t, BitStream& bs, bool hasa): FillStyle(t) {
 	rgba.a = (hasa ? 0x00 : 0xff);		load(bs);
-    };
+    }
 
     BitStream& load(BitStream& bs) {
 	return (rgba.a ? (bs >> rgba.r >> rgba.g >> rgba.b) : (bs >> rgba));
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, FillStyleSolid& fss)
-	    { return fss.load(bs); };
+	    { return fss.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, FillStyleSolid& fss) {
 	return (os  << "  Solid: " << fss.rgba << std::endl);
-    };
+    }
 };
 
 struct FillStyleSolidMorph: public FillStyle {
     RGBA rgba0, rgba1;
 
-    FillStyleSolidMorph(uint8_t t, BitStream& bs): FillStyle(t) { load(bs); };
+    FillStyleSolidMorph(uint8_t t, BitStream& bs): FillStyle(t) { load(bs); }
 
-    BitStream& load(BitStream& bs) { return (bs >> rgba0 >> rgba1); };
+    BitStream& load(BitStream& bs) { return (bs >> rgba0 >> rgba1); }
 
     friend BitStream& operator>>(BitStream& bs,
-	    FillStyleSolidMorph& fss) { return fss.load(bs); };
+	    FillStyleSolidMorph& fss) { return fss.load(bs); }
     friend std::ostream& operator<<(std::ostream& os,
 	    FillStyleSolidMorph& fss) {
 	return (os  << "  Solid morph: " << fss.rgba0
 		    << " --> " << fss.rgba1 << std::endl);
-    };
+    }
 };
 
-
-#if 0
-struct GradientRecord2 {
-    uint8_t pos;
-    RGB rgb;
-
-    BitStream& load(BitStream& bs) { return (bs >> pos >> rgb); };
-
-    friend BitStream& operator>>(BitStream& bs, GradientRecord2& gr)
-	    { return gr.load(bs); };
-};
-
-struct FillStyleGradient2: public FillStyle {
-    Matrix mat;			//uint8_t cnt;
-    std::vector<GradientRecord2> grVec;
-
-    FillStyleGradient2(uint8_t t) { type = t; };
-
-    BitStream& load(BitStream& bs) {	uint8_t cnt;
-	bs >> mat >> cnt;		grVec.resize(cnt);
-	for (uint8_t i=0; i < cnt; ++i) bs >> grVec[i];
-	return bs;
-    };
-
-    friend BitStream& operator>>(BitStream& bs, FillStyleGradient2& fsg)
-	    { return fsg.load(bs); };
-};
-#endif
 
 struct GradientRecord {
+#ifdef	NORMALIZED_COLOR//CTM_FLOAT_POINT
     union {
 	uint8_t pos;
 	float fpos;
-    };	RGBA rgba;
+    };
+#else
+    uint8_t pos;
+#endif
+    RGBA rgba;
 
-    GradientRecord() { rgba.a = 0x00; };
+    GradientRecord() { rgba.a = 0x00; }		// XXX:
 
     BitStream& load(BitStream& bs) {	bs >> pos;
 #ifdef	NORMALIZED_COLOR//CTM_FLOAT_POINT
 	fpos = pos / 255.f;	
 #endif
 	return (rgba.a ? (bs >> rgba.r >> rgba.g >> rgba.b) : (bs >> rgba));
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, GradientRecord& gr)
-	    { return gr.load(bs); };
+	    { return gr.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, GradientRecord& gr) {
 #ifndef	NORMALIZED_COLOR//CTM_FLOAT_POINT
 	return (os  << "\t    " << std::setw(4) << (int)gr.pos
@@ -809,124 +796,199 @@ struct GradientRecord {
 #else
 	return (os  << "\t    " << gr.fpos << ": " << gr.rgba << std::endl);
 #endif
+    }
+};
+
+struct GradientStructure {
+    union {	 uint8_t _;
+	struct { uint8_t cnt:4, InterpolationMode:2, SpreadMode:2; };
+    };
+    std::vector<GradientRecord> grVec;
+
+    enum {
+	SPREAD_PAD = 0, SPREAD_REFLECT, SPREAD_REPEAT,
+	SpreadPad  = 0, SpreadReflect, SpreadRepeat,
+
+	INTERPOLATION_NORMAL = 0, INTERPOLATION_LINEAR,
+	InterpolationNormal  = 0, InterpolationLinear,
     };
 };
 
-struct FillStyleGradient: public FillStyle {
-    Matrix mat;		//uint8_t cnt;
-    std::vector<GradientRecord> grVec;
+struct FillStyleGradient: public FillStyle, public GradientStructure {
+    Matrix mtx;
+    FIXED8 FocalPoint;
 
     /*
-     * A linear gradient is defined from left to right.
-     * A radial from inside to outside(from center to periphery).
-     * The gradients are always drawn in a square with coordinates 
-     * [-819.2, -819.2] to [819.2 819.2] pixels (that's 16384 in TWIPs).
-     * The usual is to scale the gradient square down, translate to the
-     * proper position and rotate as necessary. There is no point in
-     * rotating a radial gradient.
+     * All gradients are defined in a standard space called the gradient
+     * square. The gradient square is centered at (0,0), and extends from
+     * (-16384,-16384) to (16384,16384).  Each gradient is mapped from the
+     * gradient square to the display surface using a standard
+     *
+     * A linear gradient is defined from left to right.  A radial from inside
+     * to outside(from center to periphery).  The gradients are always drawn
+     * in a square with coordinates [-819.2, -819.2] to [819.2 819.2] pixels
+     * (that's 16384 in TWIPs).  The usual is to scale the gradient square
+     * down, translate to the proper position and rotate as necessary. There
+     * is no point in rotating a radial gradient.
      */
 
     FillStyleGradient(uint8_t t, BitStream& bs, bool hasa): FillStyle(t) {
 	alpha = (hasa ? 0x00 : 0xff);	load(bs);
-    };
+    }
 
-    BitStream& load(BitStream& bs) {	uint8_t cnt;
-	bs >> mat >> cnt;		grVec.resize(cnt);
-	for (uint8_t i=0; i < cnt; ++i) {
+    BitStream& load(BitStream& bs) {
+	bs >> mtx >> _;		grVec.resize(cnt);
+	for (uint8_t i = 0; i < cnt; ++i) {
 	    grVec[i].rgba.a = alpha;	bs >> grVec[i];
-	}   return bs;
-    };
+	}
+	if (type == FillStyle::GRADIENT_RADIAL_FOCAL) bs >> FocalPoint;
+	return bs;
+    }
 
     static uint8_t alpha;
 
     friend BitStream& operator>>(BitStream& bs, FillStyleGradient& fsg)
-	    { return fsg.load(bs); };
+	    { return fsg.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, FillStyleGradient& fsg) {
 	os  << "  Gradient(" << (fsg.type == FillStyle::GRADIENT_RADIAL ?
-		"linear" : "radial") << "):" << fsg.mat << std::endl;
+		"linear" : "radial") << "):" << fsg.mtx << std::endl;
 	for (std::vector<GradientRecord>::iterator it = fsg.grVec.begin();
 		it != fsg.grVec.end(); ++it) os  << *it;	return os;
-    };
+    }
 };
 
-struct FillStyleGradientMorph: public FillStyle {
-    Matrix mat0, mat1;	//uint8_t cnt;
-    std::vector<GradientRecord> grVec;
+struct FillStyleGradientMorph: public FillStyle, public GradientStructure {
+    Matrix mtx0, mtx1;
 
     FillStyleGradientMorph(uint8_t t, BitStream& bs):
-	    FillStyle(t) { load(bs); };
+	    FillStyle(t) { load(bs); }
 
-    BitStream& load(BitStream& bs) {	uint8_t cnt;
-	bs >> mat0 >> mat1 >> cnt;
-	grVec.resize((cnt <<= 1));	// beg/end
-	for (uint8_t i=0; i < cnt; ++i) bs >> grVec[i];
+    BitStream& load(BitStream& bs) {
+	bs >> mtx0 >> mtx1 >> _;
+	grVec.resize(cnt * 2);	// beg/end
+	for (uint8_t i = 0; i < grVec.size(); ++i) bs >> grVec[i];
 	return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs,
-	    FillStyleGradientMorph& fsg) { return fsg.load(bs); };
+	    FillStyleGradientMorph& fsg) { return fsg.load(bs); }
     friend std::ostream& operator<<(std::ostream& os,
 	    FillStyleGradientMorph& fsg) {
 	os  << " Gradient(" << (fsg.type == FillStyle::GRADIENT_RADIAL ?
 		"linear" : "radial") << ") morph: \n\t  "
-	    << fsg.mat0 << " --> " << fsg.mat1 << std::endl;
+	    << fsg.mtx0 << " --> " << fsg.mtx1 << std::endl;
 	for (std::vector<GradientRecord>::iterator it = fsg.grVec.begin();
 		it != fsg.grVec.end(); ++it) os  << *it;	return os;
-    };
+    }
 };
 
 
 struct FillStyleBitmap: public FillStyle {
     uint16_t rfid;
-    Matrix mat;
+    Matrix mtx;
 
-    FillStyleBitmap(uint8_t t, BitStream& bs): FillStyle(t) { load(bs); };
+    FillStyleBitmap(uint8_t t, BitStream& bs): FillStyle(t) { load(bs); }
 
-    BitStream& load(BitStream& bs) { return (bs >> rfid >> mat); };
+    BitStream& load(BitStream& bs) { return (bs >> rfid >> mtx); }
 
     friend BitStream& operator>>(BitStream& bs, FillStyleBitmap& fsb)
-	    { return fsb.load(bs); };
+	    { return fsb.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, FillStyleBitmap& fsb) {
 	return (os  << "  Bitmap " << (fsb.type % 2 ? "clipped" : "tilled")
 		    << (fsb.type < FillStyle::BITMAP_TILLED_HARD ?  "(smooth)"
-			: "clipped(hard)") << ": #" << std::left
+			: "(hard)") << ": #" << std::left
 		    << std::setw(6) << fsb.rfid << std::right
-		    << " " << fsb.mat << std::endl);
-    };
+		    << " " << fsb.mtx << std::endl);
+    }
 };
 
 struct FillStyleBitmapMorph: public FillStyle {
     uint16_t rfid;
-    Matrix mat0, mat1;
+    Matrix mtx0, mtx1;
 
-    FillStyleBitmapMorph(uint8_t t, BitStream& bs): FillStyle(t) { load(bs); };
+    FillStyleBitmapMorph(uint8_t t, BitStream& bs): FillStyle(t) { load(bs); }
 
-    BitStream& load(BitStream& bs) { return (bs >> rfid >> mat0 >> mat1); };
+    BitStream& load(BitStream& bs) { return (bs >> rfid >> mtx0 >> mtx1); }
 
     friend BitStream& operator>>(BitStream& bs, FillStyleBitmapMorph& fsb)
-	    { return fsb.load(bs); };
+	    { return fsb.load(bs); }
     friend std::ostream& operator<<(std::ostream& os,
 	    FillStyleBitmapMorph& fsb) {
 	return (os  << "  Bitmap " << (fsb.type % 2 ? "clipped" : "tilled")
 		    << (fsb.type < FillStyle::BITMAP_TILLED_HARD ?  "(smooth)"
 			: "clipped(hard)") << " morph: #" << fsb.rfid
-		    << "\n\t  " << fsb.mat0 << " --> " << fsb.mat1
+		    << "\n\t  " << fsb.mtx0 << " --> " << fsb.mtx1
 		    << std::endl);
-    };
+    }
 };
 
+inline BitStream& operator>>(BitStream& bs, FillStyle& fs)
+{
+    return bs;
+}
 
-#if 0 
+inline std::ostream& operator<<(std::ostream& os, FillStyle& fs)
+{
+    return os;
+}
+
 struct LineStyle2 {
-    uint16_t width;
-    RGB rgb;
+    RGBA Color;
+    UI16 Width;
+    union {
+	struct {
+	    uint16_t PixelHintingFlag:1, NoVScaleFlag:1, NoHScaleFlag:1,
+		     HasFillFlag:1, JoinStyle:2, StartCapStyle:2,
+		     EndCapStyle:2, NoClose:1, Reserved:5;
+	};  uint16_t _;
+    };
+    FIXED8 MiterLimitFactor;
+    FillStyle* FillType;
 
-    BitStream& load(BitStream& bs) { return (bs >> width >> rgb); };
+    enum {
+	ROUND_CAP = 0, NO_CAP, SQUARE_CAP,
+	RoundCap  = 0, NoCap, SquareCap,
+
+	ROUND_JOIN = 0, BEVEL_JOIN, MITER_JOIN,
+	RoundJoin  = 0, BevelJoin, MiterJoin,
+    };
+
+    ~LineStyle2() { delete FillType; }
+
+    BitStream& load(BitStream& bs) {
+	uint8_t type;
+
+	bs >> Width >> _;
+	if (JoinStyle == MITER_JOIN) bs >> MiterLimitFactor; else
+	    MiterLimitFactor = 0;
+	if (HasFillFlag) {
+	    bs >> type;
+	    switch (type) {
+	    case FillStyle::SOLID:
+		FillType = new FillStyleSolid(type, bs, true);		break;
+
+	    case FillStyle::GRADIENT_LINEAR:
+	    case FillStyle::GRADIENT_RADIAL:
+	    case FillStyle::GRADIENT_RADIAL_FOCAL:
+		FillType = new FillStyleGradient(type, bs, true); 	break;
+
+	    case FillStyle::BITMAP_TILLED_SMOOTH:
+	    case FillStyle::BITMAP_CLIPPED_SMOOTH:
+	    case FillStyle::BITMAP_TILLED_HARD:
+	    case FillStyle::BITMAP_CLIPPED_HARD:
+		FillType = new FillStyleBitmap(type, bs);		break;
+	    default:			FillType = NULL;
+	    }
+	} else bs >> Color;
+	return bs;
+    }
 
     friend BitStream& operator>>(BitStream& bs, LineStyle2& ls)
-	    { return ls.load(bs); };
+	    { return ls.load(bs); }
+    friend std::ostream& operator<<(std::ostream& os, LineStyle2& ls) {
+	return os;
+    }
 };
-#endif
 
 struct LineStyle {
     uint16_t width;
@@ -935,42 +997,42 @@ struct LineStyle {
     BitStream& load(BitStream& bs) {	bs >> width;
 	return (rgba.a ? (bs >> rgba.r >> rgba.g >> rgba.b)
 		       : (bs >> rgba));
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, LineStyle& ls)
-	    { return ls.load(bs); };
+	    { return ls.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, LineStyle& ls) {
 	return (os  << "  " << std::setw(4) << ls.width << " "
 		    << ls.rgba << std::endl);
-    };
+    }
 };
 
-struct LineStyleMorph {
+struct MorphLineStyle {
     uint16_t width0, width1;
     RGBA rgba0, rgba1;
 
     BitStream& load(BitStream& bs)
-	    { return (bs >> width0 >> width1 >> rgba0 >> rgba1); };
+	    { return (bs >> width0 >> width1 >> rgba0 >> rgba1); }
 
-    friend BitStream& operator>>(BitStream& bs, LineStyleMorph& ls)
-	    { return ls.load(bs); };
-    friend std::ostream& operator<<(std::ostream& os, LineStyleMorph& ls) {
+    friend BitStream& operator>>(BitStream& bs, MorphLineStyle& ls)
+	    { return ls.load(bs); }
+    friend std::ostream& operator<<(std::ostream& os, MorphLineStyle& ls) {
 	return (os  << "\t" << std::setw(4) << ls.width0 << "  "
 		    << ls.rgba0 << " --> " << std::setw(4) << ls.width1
 		    << "  " << ls.rgba1 << std::endl);
-    };
+    }
 };
 
 
 struct StyleBits {
-    union {	 uint8_t _;	// XXX
+    union {	 uint8_t _;	// XXX:
 	struct { uint8_t line:4, fill:4; };
     };
 
-    BitStream& load(BitStream& bs) { return (bs >> _); };
+    BitStream& load(BitStream& bs) { return (bs >> _); }
 
     friend BitStream& operator>>(BitStream& bs, StyleBits& sb)
-	    { return sb.load(bs); };
+	    { return sb.load(bs); }
 };
 
 struct ShapeRecord {
@@ -983,21 +1045,21 @@ struct ShapeRecord {
 			 has_lns:1, has_news:1, ty__:1; };
     };
 
-    ShapeRecord() { };
-    ShapeRecord(ShapeRecord& sr): _(sr._) { };
+    ShapeRecord() { }
+    ShapeRecord(ShapeRecord& sr): _(sr._) { }
 
     BitStream& load(BitStream& bs) {
-	_ = bs.read(END_NBIT+1, UNSIGN);	return bs;
-    };
+	_ = bs.read(END_NBIT + 1, UNSIGN);	return bs;
+    }
 
 #ifdef	ABSOLUTE_COORDINATE
     static Twip x0, y0;
 #endif
 
-    virtual ~ShapeRecord() { };
+    virtual ~ShapeRecord() { }
 
     friend BitStream& operator>>(BitStream& bs, ShapeRecord& sr)
-	    { return sr.load(bs); };
+	    { return sr.load(bs); }
 };
 
 struct ShapeRecordSetup: public ShapeRecord {
@@ -1014,7 +1076,7 @@ struct ShapeRecordSetup: public ShapeRecord {
     // they are relative to shape origin
 
     ShapeRecordSetup(ShapeRecord& sr, BitStream& bs):
-	    ShapeRecord(sr) { load(bs); };
+	    ShapeRecord(sr) { load(bs); }
 
     BitStream& load(BitStream& bs) {
 	if (has_mv2) {
@@ -1036,31 +1098,34 @@ struct ShapeRecordSetup: public ShapeRecord {
 	f1s = (has_f1s ? (bs.read(snbit.fill, UNSIGN) + fcnt) : 0u) - 1;
 	lns = (has_lns ? (bs.read(snbit.line, UNSIGN) + lcnt) : 0u) - 1;
 	return bs;
-    };
+    }
 
     static uint16_t fcnt, lcnt;
     static StyleBits snbit;
 
     friend BitStream& operator>>(BitStream& bs, ShapeRecordSetup& sr)
-	    { return sr.load(bs); };
+	    { return sr.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, ShapeRecordSetup& sr) {
-	return (os  << std::left    <<  "      Change style: F0S-#"
-		    << std::setw(5) << (int)sr.f0s << " F1S-#"
-		    << std::setw(5) << (int)sr.f1s << " LNS-#"
+	os  <<  "    Change style:";
+	if (sr.f0s < (uint16_t)-1) os << " F0S#" << (int)sr.f0s;
+	if (sr.f1s < (uint16_t)-1) os << " F1S#" << (int)sr.f1s;
+	if (sr.lns < (uint16_t)-1) os << " LNS#" << (int)sr.lns;
+	os  << "\n\tMove to " <<
 #ifndef	ABSOLUTE_COORDINATE
-		    << std::setw(5) << (int)sr.lns << "\n\tMove to +["
-#else// XXX
-		    << std::setw(5) << (int)sr.lns << "\n\tMove to  ["
+		'+'
+#else// XXX:
+		' '
 #endif
-		    << sr.mv2.dx << ' ' << sr.mv2.dy << std::right << "]\n");
-    };
+	    << "[" << sr.mv2.dx << ' ' << sr.mv2.dy << "]\n";
+	return os;
+    }
 };
 
 struct ShapeRecordEdgeCurve: public ShapeRecord {
     struct { Twip dx, dy; } ctrl, anch;	//: nbit + 2;
 
     ShapeRecordEdgeCurve(ShapeRecord& sr, BitStream& bs):
-	ShapeRecord(sr) { load(bs); };
+	ShapeRecord(sr) { load(bs); }
 
     BitStream& load(BitStream& bs) {
 	uint8_t nb = nbit + 2u;
@@ -1077,12 +1142,12 @@ struct ShapeRecordEdgeCurve: public ShapeRecord {
 	anch.dx = bs.read(nb, SIGNED);
 	anch.dy = bs.read(nb, SIGNED);
 
-	cubi.dx = ctrl.dx + anch.dx/3;
-	cubi.dy = ctrl.dy + anch.dy/3;
+	cubi.dx = ctrl.dx + anch.dx / 3;
+	cubi.dy = ctrl.dy + anch.dy / 3;
 	anch.dx = ctrl.dx + anch.dx;
 	anch.dy = ctrl.dy + anch.dy;
-	ctrl.dx =(ctrl.dx << 1)/3;
-	ctrl.dy =(ctrl.dy << 1)/3;
+	ctrl.dx =(ctrl.dx << 1) / 3;
+	ctrl.dy =(ctrl.dy << 1) / 3;
 #endif
 
 #else
@@ -1102,22 +1167,22 @@ struct ShapeRecordEdgeCurve: public ShapeRecord {
 	cubi.dy = ctrl.dy + anch.dy/3 + y0;
 	anch.dx = ctrl.dx + anch.dx   + x0;
 	anch.dy = ctrl.dy + anch.dy   + y0;
-	ctrl.dx =(ctrl.dx << 1)/3     + x0;
-	ctrl.dy =(ctrl.dy << 1)/3     + y0;
+	ctrl.dx =(ctrl.dx << 1) / 3   + x0;
+	ctrl.dy =(ctrl.dy << 1) / 3   + y0;
 
 	x0 = anch.dx, y0 = anch.dy;
 #endif
 
 #endif//ABSOLUTE_COORDINATE
 	return bs;
-    };
+    }
 
 #ifdef	CUBIC_BEZIER
     struct { Twip dx, dy; } cubi;
 #endif
 
     friend BitStream& operator>>(BitStream& bs, ShapeRecordEdgeCurve& sr)
-	    { return sr.load(bs); };
+	    { return sr.load(bs); }
     friend std::ostream& operator<<(std::ostream& os,
 	    ShapeRecordEdgeCurve& sr) {
 #ifndef	ABSOLUTE_COORDINATE
@@ -1139,14 +1204,14 @@ struct ShapeRecordEdgeCurve: public ShapeRecord {
 		    << "]\n");
 
 #endif//ABSOLUTE_COORDINATE
-    };
+    }
 };
 
 struct ShapeRecordEdgeLine : public ShapeRecord {
     Twip dx, dy;	//: nbit + 2;
 
     ShapeRecordEdgeLine (ShapeRecord& sr, BitStream& bs):
-	    ShapeRecord(sr) { load(bs); };
+	    ShapeRecord(sr) { load(bs); }
 
     BitStream& load(BitStream& bs) {
 	uint8_t nb = nbit + 2u;
@@ -1168,17 +1233,20 @@ struct ShapeRecordEdgeLine : public ShapeRecord {
 	    else	dx = (x0 += bs.read(nb, SIGNED)), dy = y0;
 #endif
 	}   return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, ShapeRecordEdgeLine& sr)
-	    { return sr.load(bs); };
+	    { return sr.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, ShapeRecordEdgeLine& sr) {
+	os  << "\tLine to " <<
 #ifndef	ABSOLUTE_COORDINATE
-	return (os  << "\tLine to +[" << sr.dx << " " << sr.dy << "]\n");
+		'+'
 #else
-	return (os  << "\tLine to  [" << sr.dx << " " << sr.dy << "]\n");
+		' '
 #endif
-    };
+	    << "[" << sr.dx << ' ' << sr.dy << "]\n";
+	return os;
+    }
 };
 
 struct FontShape {
@@ -1189,7 +1257,7 @@ struct FontShape {
     ~FontShape() {
 	for (std::vector<ShapeRecord*>::iterator it = srVec.begin();
 		it != srVec.end(); ++it) delete *it;
-    };
+    }
 
     BitStream& load(BitStream& bs) {
 	bs >> ShapeRecordSetup::snbit;
@@ -1207,14 +1275,14 @@ struct FontShape {
 		// XXX: add some sanity check here for f0s/f1s/lns
 	    }   srVec.push_back(psr);
 	}	return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, FontShape& fs)
-	    { return fs.load(bs); };
+	    { return fs.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, FontShape& fs) {
 	uint16_t i, cnt = fs.srVec.size();
 	os  << std::setw(4) << cnt << " records\n";
-	for (i=0u; i < cnt; ++i) {
+	for (i = 0u; i < cnt; ++i) {
 	    ShapeRecord* psr = fs.srVec[i];
 	    if (psr->type) {
 		if (psr->edgt)
@@ -1222,22 +1290,23 @@ struct FontShape {
 		else os  << *reinterpret_cast<ShapeRecordEdgeCurve*>(psr);
 	    } else   os  << *reinterpret_cast<ShapeRecordSetup*    >(psr);
 	}   return os;
-    };
+    }
 };
 
 struct ShapeWithStyle {
     //uint16_t fcnt, lcnt;
     std::vector<FillStyle*>   fsVec;
     std::vector<LineStyle>    lsVec;  // StyleBits snbit;
+    std::vector<LineStyle2>   l2Vec;  // StyleBits snbit;
     std::vector<ShapeRecord*> srVec;
 
-     //ShapeWithStyle(): fcnt(0u), lcnt(0u) { };
+     //ShapeWithStyle(): fcnt(0u), lcnt(0u) { }
     ~ShapeWithStyle() {
 	for (std::vector<ShapeRecord*>::iterator it = srVec.begin();
 		it != srVec.end(); ++it) delete *it;
 	for (std::vector<FillStyle*>::iterator it = fsVec.begin();
 		it != fsVec.end(); ++it) delete *it;
-    };
+    }
 
     BitStream& load(BitStream& bs) {
 	union { uint8_t coun_, alpha, type; };
@@ -1258,9 +1327,10 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 		pfs = new FillStyleSolid(type, bs, hasa);	break;
 	    case FillStyle::GRADIENT_LINEAR:
 	    case FillStyle::GRADIENT_RADIAL:
+	    case FillStyle::GRADIENT_RADIAL_FOCAL:
 		pfs = new FillStyleGradient(type, bs, hasa); 	break;
-	    case FillStyle::BITMAP_TITLED_SMOOTH: 
-	    case FillStyle::BITMAP_CLIPPED_SMOOTH: 
+	    case FillStyle::BITMAP_TILLED_SMOOTH:
+	    case FillStyle::BITMAP_CLIPPED_SMOOTH:
 	    case FillStyle::BITMAP_TILLED_HARD:
 	    case FillStyle::BITMAP_CLIPPED_HARD:
 		pfs = new FillStyleBitmap(type, bs);		break;
@@ -1290,16 +1360,16 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 		}
 	    }	    srVec.push_back(psr);
 	}	    return bs;
-    };
+    }
 
-    static bool lots, hasa;//, news;
+    static bool lots, hasa, ls2;//, news;
 
     friend BitStream& operator>>(BitStream& bs, ShapeWithStyle& sws)
-	    { return sws.load(bs); };
+	    { return sws.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, ShapeWithStyle& sws) {
 	uint16_t i, cnt = sws.fsVec.size();
 	os  << "  Fill styles(" << cnt << "): \n";
-	for (i=0u; i < cnt; ++i) {
+	for (i = 0u; i < cnt; ++i) {
 	    FillStyle* pfs = sws.fsVec[i];
 	    os  << "    #" << std::setw(4) << std::left << i << std::right;
 	    switch (pfs->type) {
@@ -1307,9 +1377,10 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 		os  << *(FillStyleSolid*)pfs;			break;
 	    case FillStyle::GRADIENT_LINEAR:
 	    case FillStyle::GRADIENT_RADIAL:
+	    case FillStyle::GRADIENT_RADIAL_FOCAL:
 		os  << *(FillStyleGradient*)pfs;		break;
-	    case FillStyle::BITMAP_TITLED_SMOOTH: 
-	    case FillStyle::BITMAP_CLIPPED_SMOOTH: 
+	    case FillStyle::BITMAP_TILLED_SMOOTH:
+	    case FillStyle::BITMAP_CLIPPED_SMOOTH:
 	    case FillStyle::BITMAP_TILLED_HARD:
 	    case FillStyle::BITMAP_CLIPPED_HARD:
 		os  << *(FillStyleBitmap*)pfs;			break;
@@ -1321,7 +1392,7 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 	}
 
 	os  << "  Line styles(" << (cnt = sws.lsVec.size()) << "): \n";
-	for (i=0u; i < cnt; ++i)
+	for (i = 0u; i < cnt; ++i)
 	    os  << "    #" << std::setw(4) << std::left << i
 		<< ": " << std::right << sws.lsVec[i];
 #if 0
@@ -1330,7 +1401,7 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 	    << std::endl;
 #endif
 	os  << "  Shape records(" << (cnt = sws.srVec.size()) << "): \n";
-	for (i=0u; i < cnt; ++i) {
+	for (i = 0u; i < cnt; ++i) {
 	    ShapeRecord* psr = sws.srVec[i];
 	    if (psr->type) {
 		if (psr->edgt)
@@ -1344,7 +1415,8 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 struct MorphShapeWithStyle {
     //uint16_t fcnt, lcnt;
     std::vector<FillStyle*> fsVec;
-    std::vector<LineStyleMorph> lsVec;  // StyleBits snbit;
+    std::vector<MorphLineStyle>  lsVec;  // StyleBits snbit;
+    //std::vector<MorphLineStyle2> l2Vec;  // StyleBits snbit;
     std::vector<ShapeRecord*> srVec0, srVec1;
 
 /*
@@ -1361,7 +1433,7 @@ struct MorphShapeWithStyle {
  * * The fill color of the shape (if filled with a color)
  * * The bitmap transform (if filled with a bitmap)
  * * The gradient transform (if filled with a gradient)
- * * The color and position of each point in the gradient. 
+ * * The color and position of each point in the gradient.
  *
  * A number of restrictions apply to morphing. These restrictions are:
  * * The start and end shapes must have the same number of edges
@@ -1370,7 +1442,7 @@ struct MorphShapeWithStyle {
  * * The style change records must be the same for the start and end shapes
  * * If filled with a bitmap, both shapes must be filled with the same bitmap.
  * * If filled with a gradient, both gradients must have
- *	the same number of color points. 
+ *	the same number of color points.
  */
 
     ~MorphShapeWithStyle() {
@@ -1380,7 +1452,7 @@ struct MorphShapeWithStyle {
 		it != srVec0.end(); ++it) delete *it;
 	for (std::vector<FillStyle*>::iterator it = fsVec.begin();
 		it != fsVec .end(); ++it) delete *it;
-    };
+    }
 
     BitStream& load(BitStream& bs) {
 	bool start = true;
@@ -1401,9 +1473,10 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 		pfs = new FillStyleSolidMorph(type, bs); 	break;
 	    case FillStyle::GRADIENT_LINEAR:
 	    case FillStyle::GRADIENT_RADIAL:
+	    //case FillStyle::GRADIENT_RADIAL_FOCAL:
 		pfs = new FillStyleGradientMorph(type, bs); 	break;
-	    case FillStyle::BITMAP_TITLED_SMOOTH: 
-	    case FillStyle::BITMAP_CLIPPED_SMOOTH: 
+	    case FillStyle::BITMAP_TILLED_SMOOTH:
+	    case FillStyle::BITMAP_CLIPPED_SMOOTH:
 	    case FillStyle::BITMAP_TILLED_HARD:
 	    case FillStyle::BITMAP_CLIPPED_HARD:
 		pfs = new FillStyleBitmapMorph(type, bs); 	break;
@@ -1432,7 +1505,7 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 	}
 
 #if 0//def	ABSOLUTE_COORDINATE
-	ShapeRecord::x0 = 0, ShapeRecord::y0 = 0;	// XXX
+	ShapeRecord::x0 = 0, ShapeRecord::y0 = 0;	// XXX:
 #endif
     }	start = false;
 
@@ -1449,15 +1522,15 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 		}
 	    }	    srVec1.push_back(psr);
 	}	    return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, MorphShapeWithStyle& sws)
-	    { return sws.load(bs); };
+	    { return sws.load(bs); }
     friend std::ostream& operator<<(std::ostream& os,
 	    MorphShapeWithStyle& sws) {
 	uint16_t i, cnt = sws.fsVec.size();
 	os  << "  Fill styles(" << cnt << "): \n";
-	for (i=0; i < cnt; ++i) {
+	for (i = 0u; i < cnt; ++i) {
 	    FillStyle* pfs = sws.fsVec[i];
 	    os  << "    #" << std::setw(4) << std::left << i << std::right;
 	    switch (pfs->type) {
@@ -1466,8 +1539,8 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 	    case FillStyle::GRADIENT_LINEAR:
 	    case FillStyle::GRADIENT_RADIAL:
 		os  << *(FillStyleGradientMorph*)pfs;		break;
-	    case FillStyle::BITMAP_TITLED_SMOOTH: 
-	    case FillStyle::BITMAP_CLIPPED_SMOOTH: 
+	    case FillStyle::BITMAP_TILLED_SMOOTH:
+	    case FillStyle::BITMAP_CLIPPED_SMOOTH:
 	    case FillStyle::BITMAP_TILLED_HARD:
 	    case FillStyle::BITMAP_CLIPPED_HARD:
 		os  << *(FillStyleBitmapMorph*)pfs;		break;
@@ -1479,7 +1552,7 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 	}
 
 	os  << "  Line styles(" << (cnt = sws.lsVec.size()) << "): \n";
-	for (i=0; i < cnt; ++i)
+	for (i = 0; i < cnt; ++i)
 	    os  << "    #" << std::setw(4) << std::left << i
 		<< ": " << std::right << sws.lsVec[i];
 #if 0
@@ -1488,7 +1561,7 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 	    << std::endl;
 #endif
 	os  << "  Shape records(" << (cnt = sws.srVec0.size()) << "): start\n";
-	for (i=0; i < cnt; ++i) {
+	for (i = 0; i < cnt; ++i) {
 	    ShapeRecord* psr = sws.srVec0[i];
 	    if (psr->type) {
 		if (psr->edgt)
@@ -1498,7 +1571,7 @@ NEWS:	bs >> coun_;	     ShapeRecordSetup::fcnt = fcnt;
 	}
 
 	os  << "  Shape records(" << (cnt = sws.srVec1.size()) << "):   end\n";
-	for (i=0; i < cnt; ++i) {
+	for (i = 0; i < cnt; ++i) {
 	    ShapeRecord* psr = sws.srVec1[i];
 	    if (psr->type) {
 		if (psr->edgt)
@@ -1520,7 +1593,7 @@ struct TextRecord {
     BitStream& load(BitStream& bs) { return (bs >> endr); }
 
     friend BitStream& operator>>(BitStream& bs, TextRecord& tr)
-	    { return tr.load(bs); };
+	    { return tr.load(bs); }
 };
 
 struct TextEntry {
@@ -1530,20 +1603,20 @@ struct TextEntry {
     BitStream& load(BitStream& bs) {
 	gidx = bs.read(gnb, UNSIGN);
 	advs = bs.read(anb, SIGNED);	return bs;
-    };
+    }
 
     static uint8_t gnb, anb;
 
     friend BitStream& operator>>(BitStream& bs, TextEntry& te)
-	    { return te.load(bs); };
+	    { return te.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, TextEntry& te) {
 	return (os  << "\tGlyph #" << std::setfill('0') << std::setw(4)
 		<< te.gidx << ", advanced by " << std::setfill(' ')
 		<< std::setw(4) << te.advs << " twips\n");
-    };
+    }
 };
 
-#if 0
+#if 0// XXX:
 struct TextRecordSetup: public TextRecord {
     RGBA rgba;		// out of order regarding alignment
     uint16_t fref;
@@ -1551,7 +1624,7 @@ struct TextRecordSetup: public TextRecord {
     struct { int16_t dx, dy; } mv2;
 
     TextRecordSetup(TextRecord& tr, bool hasa): TextRecord(tr)
-	    { rgba.a = (hasa ? 0x00 : 0xff); };
+	    { rgba.a = (hasa ? 0x00 : 0xff); }
 
     BitStream& load(BitStream& bs) {	bs >> fref;
 	if (has_colr) {
@@ -1560,31 +1633,31 @@ struct TextRecordSetup: public TextRecord {
 	if (has_movx)  bs >> mv2.dx;
 	if (has_movy)  bs >> mv2.dy;
 	if (has_font)  bs >> height;	return bs;
-    };
+    }
 };
 
 struct TextRecordGlyph: public TextRecord {
     std::vector<TextEntry> teVec;
 
-    TextRecordGlyph(TextRecord& tr): TextRecord(tr) { };
+    TextRecordGlyph(TextRecord& tr): TextRecord(tr) { }
 
     BitStream& load(BitStream& bs) {	teVec.resize(glyf);
-	for (uint8_t i=0; i < glyf; ++i) bs >> teVec[i];
+	for (uint8_t i = 0; i < glyf; ++i) bs >> teVec[i];
 	return bs;
-    };
+    }
 };
 
 struct TextRecordString: public TextRecordSetup {
     std::vector<TextEntry> teVec;
 
-    TextRecordString(TextRecordSetup& tr): TextRecordSetup(tr) { };
+    TextRecordString(TextRecordSetup& tr): TextRecordSetup(tr) { }
 
     BitStream& load(BitStream& bs) {
 	uint8_t count;		TextRecordSetup::load(bs);
 	bs >> count;		teVec.resize(count);
-	for (uint8_t i=0; i < glyf; ++i) bs >> teVec[i];
+	for (uint8_t i = 0; i < glyf; ++i) bs >> teVec[i];
 	return bs;
-    };
+    }
 };
 
 #else
@@ -1597,7 +1670,7 @@ struct TextRecordString: public TextRecord {
     std::vector<TextEntry> teVec;
 
     TextRecordString(TextRecord& tr, bool hasa): TextRecord(tr)
-	    { rgba.a = (hasa ? 0x00 : 0xff); };
+	    { rgba.a = (hasa ? 0x00 : 0xff); }
     BitStream& load(BitStream& bs) {	uint8_t count;
 	if (has_font) bs >> fref; else fref = 0u;
 	if (has_colr) {
@@ -1607,12 +1680,12 @@ struct TextRecordString: public TextRecord {
 	if (has_movy) bs >> mv2.dy; else mv2.dy = 0;
 	if (has_font) bs >> height; else height = 0u;
 	bs >> count;		teVec.resize(count);
-	for (uint8_t i=0; i < count; ++i) bs >> teVec[i];
+	for (uint8_t i = 0; i < count; ++i) bs >> teVec[i];
 	return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, TextRecordString& trs)
-	    { return trs.load(bs); };
+	    { return trs.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, TextRecordString& trs) {
 	os  << "\tFont #" << trs.fref << ", height " << trs.height
 	    << ", color " << trs.rgba << ", offset [" << trs.mv2.dx
@@ -1629,16 +1702,16 @@ struct Kerning {
 	uint16_t code;
     };   int16_t adjs;
 
-    BitStream& load(BitStream& bs) { return (bs >> code >> adjs); };
+    BitStream& load(BitStream& bs) { return (bs >> code >> adjs); }
 
     friend BitStream& operator>>(BitStream& bs, Kerning& kn)
-	    { return kn.load(bs); };
+	    { return kn.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, Kerning& kn) {
 	return (os  << "\t(#" << std::setfill('0') << std::setw(4)
 		    << kn.c1 << ", #" << std::setw(4) << kn.c2
 		    << std::setfill(' ') << ") adjuct "
 		    << kn.adjs << " twips\n");
-    };
+    }
 };
 
 struct KerningWide {
@@ -1647,29 +1720,29 @@ struct KerningWide {
 	uint32_t code;
     };   int16_t adjs;
 
-    BitStream& load(BitStream& bs) { return (bs >> code >> adjs); };
+    BitStream& load(BitStream& bs) { return (bs >> code >> adjs); }
 
     friend BitStream& operator>>(BitStream& bs, KerningWide& kn)
-	    { return kn.load(bs); };
+	    { return kn.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, KerningWide& kn) {
 	return (os  << "\t(#" << std::setfill('0') << std::setw(4)
 		    << kn.c1 << ", #" << std::setw(4) << kn.c2
 		    << std::setfill(' ') << ") adjuct "
 		    << kn.adjs << " twips\n");
-    };
+    }
 };
 
 struct Envelope {
     uint32_t p44k;		// unit in samples
     uint16_t vll, vlr;		// XXX: prescaled by 256
-    BitStream& load(BitStream& bs) { return (bs >> p44k >> vll >> vlr); };
+    BitStream& load(BitStream& bs) { return (bs >> p44k >> vll >> vlr); }
 
     friend BitStream& operator>>(BitStream& bs, Envelope& ev)
-	    { return ev.load(bs); };
+	    { return ev.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, Envelope& ev) {
 	return (os  << "\t" << std::setw(5) << ev.p44k
 		    << ": L-" << ev.vll << ", R-" << ev.vlr << std::endl);
-    };
+    }
 };
 
 struct SoundInfo {
@@ -1691,49 +1764,49 @@ struct SoundInfo {
 	if (has_op) bs >> opoint; else opoint = UINT_MAX;
 	if (has_lp) bs >> lcount; else lcount = 1;
 	if (has_en){bs >> ecount; enVec.resize(ecount);
-	    for (uint8_t i=0; i < ecount; ++i) bs >> enVec[i];
+	    for (uint8_t i = 0; i < ecount; ++i) bs >> enVec[i];
 	} else ecount = 0;		return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, SoundInfo& si)
-	    { return si.load(bs); };
+	    { return si.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, SoundInfo& si) {
 	os  << "  sound #" << si.rfid << " loop " << si.lcount
 	    << " times from " << si.ipoint << " to " << si.opoint << std::endl;
 	if (!si.enVec.empty()) os  << "    Envelopes:\n";
 	for (std::vector<Envelope>::iterator it = si.enVec.begin();
 		it != si.enVec.end(); ++it) os << *it;		return os;
-    };
+    }
 };
 
 struct External {
     uint16_t rfid;
     std::string smbl;
 
-    BitStream& load(BitStream& bs) { return (bs >> rfid >> smbl); };
+    BitStream& load(BitStream& bs) { return (bs >> rfid >> smbl); }
 
     friend BitStream& operator>>(BitStream& bs, External& ex)
-	    { return ex.load(bs); };
+	    { return ex.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, External& ex) {
 	return (os  << "  #" << std::left << std::setw(5) << ex.rfid
 		    << ": " << ex.smbl.data() << std::right << std::endl);
-    };
+    }
 };
 
 struct Params {
     uint8_t regs;
     std::string name;
 
-    BitStream& load(BitStream& bs) { return (bs >> regs >> name); };
+    BitStream& load(BitStream& bs) { return (bs >> regs >> name); }
 
     friend BitStream& operator>>(BitStream& bs, Params& pm)
-	    { return pm.load(bs); };
+	    { return pm.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, Params& pm) {
 	return (os  << "  0x" << std::left	  << std::setfill('0')
 		    << std::setw(4)   << std::hex << pm.regs << ": "
 		    << pm.name.data() << std::dec << std::setfill(' ')
 		    << std::endl);
-    };
+    }
 };
 
 struct Button {
@@ -1743,38 +1816,38 @@ struct Button {
 	struct { uint8_t upon:1, over:1, down:1, hitt:1, xxxx:4; };
     };
     uint16_t btid, layer;
-    Matrix mat;
+    Matrix mtx;
 
-    BitStream& load(BitStream& bs) { return (bs >> btid >> layer >> mat); };
+    BitStream& load(BitStream& bs) { return (bs >> btid >> layer >> mtx); }
 
     friend BitStream& operator>>(BitStream& bs, Button& bt)
-	    { return bt.load(bs); };
+	    { return bt.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, Button& btn) {
 	os << "    State(s):";
 	if (btn.upon) os << " UPON";	if (btn.over) os << " OVER";
 	if (btn.down) os << " DOWN";	if (btn.hitt) os << " HITT";
 	return (os  << "\n      Button #" << btn.btid << " at depth #"
-		    << btn.layer << ": \n\t Coord matrix: "
-		    << btn.mat << std::endl);
-    };
+		    << btn.layer << ": \n\t Coord Matrix: "
+		    << btn.mtx << std::endl);
+    }
 };
 
 struct Button2: public Button {
     CXForm cxf;
 
-    BitStream& load(BitStream& bs) { return (Button::load(bs) >> cxf); };
+    BitStream& load(BitStream& bs) { return (Button::load(bs) >> cxf); }
 
     friend BitStream& operator>>(BitStream& bs, Button2& bt)
-	    { return bt.load(bs); };
+	    { return bt.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, Button2& btn) {
 	os << "    State(s):";
 	if (btn.upon) os << " UPON";	if (btn.over) os << " OVER";
 	if (btn.down) os << " DOWN";	if (btn.hitt) os << " HITT";
 	return (os  << "\n      Button #" << btn.btid << " at depth #"
-		    << btn.layer << ": \n\tCoord matrix: "
-		    << btn.mat << "\n\tColor matrix: "
+		    << btn.layer << ": \n\tCoord Matrix: "
+		    << btn.mtx << "\n\tColor Matrix: "
 		    << btn.cxf << std::endl);
-    };
+    }
 };
 
 struct Event {
@@ -1789,28 +1862,28 @@ struct Event {
     };	//uint32_t length;
     std::vector<Action*> axVec;
 
-     Event(uint32_t f): _(f) { };
+     Event(uint32_t f): _(f) { }
     ~Event() {
 	for (std::vector<Action*>::iterator it = axVec.begin();
 		it != axVec.end(); ++it) delete *it;
-    };
+    }
 
     BitStream& load(BitStream& bs) {	uint32_t length;
 	Action* ax;			bs >> length;
 	do {	ax = new Action;	bs >> *ax;
 	    axVec.push_back(ax);
 	} while (ax->id != ACTION::CODE::End);   return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, Event& ev)
-	    { return ev.load(bs); };
+	    { return ev.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, Event& ev) {
 	os  << "    Events: 0x"	    << std::setfill('0') << std::hex
 	    << std::setw(8) << ev._ << std::setfill(' ') << std::dec
 	    << std::endl;
 	for (std::vector<Action*>::iterator it = ev.axVec.begin();
 		it != ev.axVec.end(); ++it) os << **it;		return os;
-    };
+    }
 };
 
 struct Condition {
@@ -1836,17 +1909,17 @@ struct Condition {
 		it != axVec.end(); ++it) {
 	    delete *it;
 	}
-    };
+    }
 
     BitStream& load(BitStream& bs) {	//uint16_t len;
 	Action* ax;			bs >> /*len >> */_;
 	do {	ax = new Action;	bs >> *ax;
 	    axVec.push_back(ax);
 	} while (ax->id != ACTION::CODE::End);	    return bs;
-    };
+    }
 
     friend BitStream& operator>>(BitStream& bs, Condition& cx)
-	    { return cx.load(bs); };
+	    { return cx.load(bs); }
     friend std::ostream& operator<<(std::ostream& os, Condition& cx) {
 	os  << "    Conditions: 0x" << std::setfill('0') << std::hex
 	    << std::setw(4) << cx._ << std::setfill(' ') << std::dec
@@ -1854,157 +1927,230 @@ struct Condition {
 	for (std::vector<Action*>::iterator it = cx.axVec.begin();
 		it != cx.axVec.end(); ++it) os << **it;
 	return os;
-    };
+    }
 };
 
 struct Filter {
-    enum FilterCode { DROPSHADOW, BLUR, GROW, BEVEL, GRADIENTGROW,
-	ADJUSTCOLOR, GRADIENTBEVEL, };
+    enum FilterCode {
+	DropShadow = 0, Blur, Grow, Bevel, GradientGrow,
+	Convolution, AdjustColor, ColorMatrix = 6, GradientBevel,
+	DROPSHADOW = 0, BLUR, GROW, BEVEL, GRADIENTGROW,
+	CONVOLUTION, ADJUSTCOLOR, COLORMATRIX = 6, GRADIENTBEVEL,
+    };
+
+    typedef FilterCode FilterType;
+    typedef FilterCode FilterID;
 
     uint8_t type;
 
-    Filter(uint8_t t): type(t) { };
-    //Filter(Filter& f): type(f.type) { };
+    Filter(uint8_t t): type(t) { }
+    //Filter(Filter& f): type(f.type) { }
 
-    BitStream& load(BitStream& bs) { return (bs >> type); };
+    BitStream& load(BitStream& bs) { return (bs >> type); }
 
     friend BitStream& operator>>(BitStream& bs, Filter& fl)
-	    { return fl.load(bs); };
-};
-
-struct FilterDropShadow: public Filter {
-    union {
-	uint8_t data[23];
-    };
-
-    //FilterDropShadow(uint8_t t): Filter(t) { };
-    //FilterDropShadow(Filter& f): Filter(f) { };
-    FilterDropShadow(uint8_t t, BitStream& bs): Filter(t) { load(bs); };
-
-    BitStream& load(BitStream& bs) {
-	bs.read((char*)data, sizeof(data));	return bs;
-    };
-
-    friend BitStream& operator>>(BitStream& bs, FilterDropShadow& fl)
-	    { return fl.load(bs); };
-};
-
-struct FilterBlur: public Filter {
-    union {
-	uint8_t data[9];
-    };
-
-    //FilterBlur(uint8_t t): Filter(t) { };
-    //FilterBlur(Filter& f): Filter(f) { };
-    FilterBlur(uint8_t t, BitStream& bs): Filter(t) { load(bs); };
-
-    BitStream& load(BitStream& bs) {
-	bs.read((char*)data, sizeof(data));	return bs;
-    };
-
-    friend BitStream& operator>>(BitStream& bs, FilterBlur& fl)
-	    { return fl.load(bs); };
+	    { return fl.load(bs); }
 };
 
 struct FilterGrow: public Filter {
+    RGBA ShadowColor;
+    FIXED BlurX, BlurY;
+    FIXED8 Strength;
     union {
-	uint8_t data[15];
+	struct {
+	    uint8_t Passes:5, CompositeSource:1, Knockout:1, InnerShadow:1;
+	};  uint8_t _;
     };
 
-    //FilterGrow(uint8_t t): Filter(t) { };
-    //FilterGrow(Filter& f): Filter(f) { };
-    FilterGrow(uint8_t t, BitStream& bs): Filter(t) { load(bs); };
+    FilterGrow(uint8_t t): Filter(t) { }
+    //FilterGrow(Filter& f): Filter(f) { }
+    FilterGrow(uint8_t t, BitStream& bs): Filter(t) { load(bs); }
 
     BitStream& load(BitStream& bs) {
-	bs.read((char*)data, sizeof(data));	return bs;
-    };
+	return bs >> ShadowColor >> BlurX >> BlurY >> Strength >> _;
+    }
 
     friend BitStream& operator>>(BitStream& bs, FilterGrow& fl)
-	    { return fl.load(bs); };
+	    { return fl.load(bs); }
+};
+
+struct FilterDropShadow: public FilterGrow {
+    FIXED Angle, Distance;
+
+    //FilterDropShadow(uint8_t t): Filter(t) { }
+    //FilterDropShadow(Filter& f): Filter(f) { }
+    FilterDropShadow(uint8_t t, BitStream& bs): FilterGrow(t) { load(bs); }
+
+    BitStream& load(BitStream& bs) {
+	bs  >> ShadowColor >> BlurX >> BlurY >> Angle >> Distance
+	    >> Strength >> _;	return bs;
+    }
+
+    friend BitStream& operator>>(BitStream& bs, FilterDropShadow& fl)
+	    { return fl.load(bs); }
+};
+
+struct FilterBlur: public Filter {
+    FIXED BlurX, BlurY;
+    union {	 uint8_t _;
+	struct { uint8_t Passes:5, Reserved:3; };
+    };
+
+    //FilterBlur(uint8_t t): Filter(t) { }
+    //FilterBlur(Filter& f): Filter(f) { }
+    FilterBlur(uint8_t t, BitStream& bs): Filter(t) { load(bs); }
+
+    BitStream& load(BitStream& bs) {
+	bs >> BlurX >> BlurY >> _;	return bs;
+    }
+
+    friend BitStream& operator>>(BitStream& bs, FilterBlur& fl)
+	    { return fl.load(bs); }
 };
 
 struct FilterBevel: public Filter {
-    union {
-	uint8_t data[27];
+    RGBA ShadowColor, HighlightColor;
+    FIXED BlurX, BlurY, Angle, Distance;
+    FIXED8 Strength;
+    union {	 uint8_t _;
+	struct { uint8_t Passes:4, OnTop:1, CompositeSource:1,
+			 Knockout:1, InnerShadow:1;
+	};
     };
 
-    //FilterBevel(uint8_t t): Filter(t) { };
-    //FilterBevel(Filter& f): Filter(f) { };
-    FilterBevel(uint8_t t, BitStream& bs): Filter(t) { load(bs); };
+    //FilterBevel(uint8_t t): Filter(t) { }
+    //FilterBevel(Filter& f): Filter(f) { }
+    FilterBevel(uint8_t t, BitStream& bs): Filter(t) { load(bs); }
 
     BitStream& load(BitStream& bs) {
-	bs.read((char*)data, sizeof(data));	return bs;
-    };
+	return bs >> ShadowColor >> HighlightColor >> BlurX >> BlurY
+		  >> Angle >> Distance >> Strength >> _;
+    }
 
     friend BitStream& operator>>(BitStream& bs, FilterBevel& fl)
-	    { return fl.load(bs); };
+	    { return fl.load(bs); }
+};
+
+struct FilterConvolution: public Filter {
+    union {	 uint8_t _;
+	struct { uint8_t PreserveAlpha:1, Clamp:1, Reserved:6; };
+    };	// out of order regarding alignment
+    RGBA DefaultColor;
+    FIXED Divisor, Bias;
+    std::vector<std::vector<FIXED> > matVec;	// XXX: float
+
+    // FilterConvolution(uint8_t t): Filter(t) { }
+    // FilterConvolution(Filter& f): Filter(f) { }
+     FilterConvolution(uint8_t t, BitStream& bs): Filter(t) { load(bs); }
+
+    BitStream& load(BitStream& bs) {
+	float val;
+	UI8 MatrixX, MatrixY;
+	bs >> MatrixX >> MatrixY;
+	bs >> val; Divisor = val * 65535.f;
+	bs >> val; Bias	   = val * 65535.f;
+	matVec.resize(MatrixY);
+	for (uint8_t j = 0; j < MatrixY; ++j) {
+	    matVec[j].resize(MatrixX);
+	    for (uint8_t i = 0; i < MatrixX; ++i) {
+		bs >> val; matVec[j][i] = val * 65535.f;
+	    }
+	}
+	bs >> DefaultColor >> _;	return bs;
+    }
+
+    friend BitStream& operator>>(BitStream& bs, FilterConvolution& fl)
+	    { return fl.load(bs); }
 };
 
 struct FilterAdjustColor: public Filter {
+    /* A Color Matrix filter applies a color transformation on the pixels of a
+     * display list object. Given an input RGBA pixel in a display list
+     * object, the color transformation is calculated in the following way:
+     *
+     * The resulting RGBA values are saturated. The matrix values are stored
+     * from left to right and each row from top to bottom. The last row is
+     * always assumed to be (0,0,0,0,1) and does not need to be stored.
+     *
+     *	|R'|   |r0 r1 r2 r3 r4| |R|
+     *	|G'|   |g0 g1 g2 g3 g4| |G|
+     *	|B'| = |b0 b1 b2 b3 b4| |B|
+     *	|A'|   |a0 a1 a2 a3 a4| |A|
+     *	|1 |   | 0  0  0  0  1| |1|
+     */
+
     union {
-	uint8_t data[80];
+	float _f[5][5], __f[25];
+	FIXED _F[5][5], __F[25];
+	struct { FIXED R[5], G[5], B[5], A[5], O[5]; };
     };
 
-    //FilterAdjustColor(uint8_t t): Filter(t) { };
-    //FilterAdjustColor(Filter& f): Filter(f) { };
-    FilterAdjustColor(uint8_t t, BitStream& bs): Filter(t) { load(bs); };
+    //FilterAdjustColor(uint8_t t): Filter(t) { }
+    //FilterAdjustColor(Filter& f): Filter(f) { }
+    FilterAdjustColor(uint8_t t, BitStream& bs): Filter(t) { load(bs); }
 
     BitStream& load(BitStream& bs) {
-	bs.read((char*)data, sizeof(data));	return bs;
-    };
+	for (uint8_t i = 0; i < 4 * 5; ++i) {
+	    bs >> __f[i];	__F[i] = __f[i] * 65535.f;
+	}
+	__F[23] = __F[22] = __F[21] = __F[20] = 0, __F[24] = 1;	// XXX:
+	return bs;
+    }
 
     friend BitStream& operator>>(BitStream& bs, FilterAdjustColor& fl)
-	    { return fl.load(bs); };
+	    { return fl.load(bs); }
 };
-
-struct FilterGradientRepeat {
-    union {
-	uint8_t data[5];
-    };
-};
+typedef FilterAdjustColor FilterColorMatrix;
 
 struct FilterGradientGrow: public Filter {
-    //uint8_t count;
-    std::vector<FilterGradientRepeat> rpVec;
-    union {
-	uint8_t data[19];
+    //uint8_t NumColors;
+    std::vector<RGBA> GradientColors;
+    std::vector<UI8>  GradientRatio;
+    FIXED BlurX, BlurY, Angle, Distance;
+    FIXED8 Strength;
+    union {	 uint8_t _;
+	struct { uint8_t Passes:4, OnTop:1, CompositeSource:1,
+			 Knockout:1, InnerShadow:1;
+	};
     };
 
-    //FilterGradientGrow(uint8_t t): Filter(t) { };
-    //FilterGradientGrow(Filter& f): Filter(f) { };
-    FilterGradientGrow(uint8_t t, BitStream& bs): Filter(t) { load(bs); };
+    FilterGradientGrow(uint8_t t): Filter(t) { }
+    //FilterGradientGrow(Filter& f): Filter(f) { }
+    FilterGradientGrow(uint8_t t, BitStream& bs): Filter(t) { load(bs); }
 
-    BitStream& load(BitStream& bs) {	uint8_t count;
-	bs >> count;			rpVec.resize(count);
-	for (uint8_t i=0; i < count; ++i)
-	    bs.read((char*)rpVec[i].data, sizeof(rpVec[i].data));
-	bs.read((char*)data, sizeof(data));	return bs;
-    };
+    BitStream& load(BitStream& bs) {
+	uint8_t NumColors;
+	bs >> NumColors;
+	GradientColors.resize(NumColors);
+	GradientRatio .resize(NumColors);
+	for (uint8_t i = 0; i < NumColors; ++i) bs >> GradientColors[i];
+	for (uint8_t i = 0; i < NumColors; ++i) bs >> GradientRatio[i];
+	return bs >> BlurX >> BlurY >> Angle >> Distance >> Strength >> _;
+    }
 
     friend BitStream& operator>>(BitStream& bs, FilterGradientGrow& fl)
-	    { return fl.load(bs); };
+	    { return fl.load(bs); }
 };
 
-struct FilterGradientBevel: public Filter {
-    //uint8_t count;
-    std::vector<FilterGradientRepeat> rpVec;
-    union {
-	uint8_t data[19];
+typedef FilterGradientGrow FilterGradientBevel;
+
+struct ClipActions {
+    //UI16 Reserved;
+    union ClipEventFlags {
+	struct {
+	    union {	 uint16_t _;
+		struct { uint16_t Load:1, EnterFrame:1, Unload:1, MouseMove:1,
+				  MouseDown:1, MouseUp:1, KeyDown:1, KeyUp:1,
+				  Data:1, Initialize:1, Press:1, Release:1,
+			ReleaseOutside:1, RollOver:1, RollOut:1, DragOver:1;
+		};
+	    };
+	    struct { uint16_t DragOut:1, KeyPress:1, Construct:1,
+			      Reserved:5, KeyCode:8;	// XXX:
+	    };
+	};  uint32_t __;
     };
 
-    //FilterGradientBevel(uint8_t t): Filter(t) { };
-    //FilterGradientBevel(Filter& f): Filter(f) { };
-    FilterGradientBevel(uint8_t t, BitStream& bs): Filter(t) { load(bs); };
-
-    BitStream& load(BitStream& bs) {	uint8_t count;
-	bs >> count;			rpVec.resize(count);
-	for (uint8_t i=0; i < count; ++i)
-	    bs.read((char*)rpVec[i].data, sizeof(rpVec[i].data));
-	bs.read((char*)data, sizeof(data));	return bs;
-    };
-
-    friend BitStream& operator>>(BitStream& bs, FilterGradientBevel& fl)
-	    { return fl.load(bs); };
 };
 
 inline uint32_t bitn2mask(uint8_t  n) { return (0x01 << n); }
@@ -2014,26 +2160,37 @@ inline uint8_t  mask2bitn(uint32_t m) {
 
 inline void dump_data(std::ostream& os, uint8_t* data, uint16_t size) {
     uint16_t i, j;
+
     os  << std::setfill('0') << std::hex;
-    for (i=0u; i < size; ++i) {
-	if (!(j = i % 16u)) os << std::endl << "    "
-	    << std::setw(4) << i << ':' << ' ';
-	os	<< ' ' << std::setw(2) << (unsigned)data[i];
+
+    for (i = 0u; i < size; ++i) {
+	if (!(j = i % 16u)) os << "\n    "
+		    << std::setw(4) << i << ':' << ' ';
+
+	os  << ' '  << std::setw(2) << (unsigned)data[i];
+
 	if ((i % 8u) == 7u) os << ' ';
+
 	if (j == 15u) {
 	    os << ' ' << '|';
+
 	    for (j = i - 15u; j <= i; ++j)
 		os << char(std::isprint(data[j]) ? data[j] : '.');
+
 	    os << '|';
 	}
     }
 
     if ((j = i % 16u)) {
 	for (; j < 16u; ++j) os << (((j % 8u) == 7u) ? "    " : "   ");
+
 	os << ' ' << '|';
-	for (j = i   - (i % 16u); j < i; ++j)
+
+	for (j = i - (i % 16u); j < i; ++j)
 	    os << char(std::isprint(data[j]) ? data[j] : '.');
+
 	for (j = i % 16u; j < 16u; ++j) os << ' ';
+
 	os << '|';
     }
 

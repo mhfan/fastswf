@@ -55,7 +55,7 @@ inline uint64_t rdtsc ()
     return dst;
 }
 
-float get_cpu_freq () 
+float get_cpu_freq ()
 {
     uint64_t freq = rdtsc(); sleep(1); return freq = rdtsc() - freq;
 }

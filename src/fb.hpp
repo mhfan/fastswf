@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: fb.hpp         Thu, 06 Apr 2006 16:49:11 +0800  mhfan $ *
  *                                                              *
@@ -56,7 +56,7 @@ struct FrameBuffer {
 	    fprintf(stderr, "Unmap frame buffer: %s\n", strerror(errno));
 	if (flag & TRANSFORM_MASK) free(pixl);
 	if (0 < fd) close(fd);
-    };
+    }
 
      FrameBuffer(const char* path = DEFAULT_FBDEV_PATH) {
 	struct fb_fix_screeninfo finfo;
@@ -68,7 +68,8 @@ struct FrameBuffer {
 		(scrn = (unsigned char*)mmap(0, (size = finfo.smem_len),
 			(PROT_READ | PROT_WRITE), MAP_SHARED, fd, 0)) ==
 				(void*)-1) {
-	    fprintf(stderr, "%s: %s\n", path, strerror(errno));	//return -1;
+	    fprintf(stderr, "%s: %s\n", path, strerror(errno));
+	    return; //-1;
 	}
 
 	flag  = 0x00;
@@ -76,11 +77,11 @@ struct FrameBuffer {
 	xres  = width = vinfo.xres;	yres = height = vinfo.yres;
 	depth = vinfo.red  .length + vinfo.blue  .length +
 		    vinfo.green.length + vinfo.transp.length;
-	bpp   =(vinfo.bits_per_pixel + 7) / 8;	// XXX
+	bpp   =(vinfo.bits_per_pixel + 7) / 8;	// XXX:
 	bpl   = finfo.line_length; //vinfo.xres * bpp;
 
 	fprintf(stdout, "FB: %dx%d@%d; ", xres, yres, depth);
-    };
+    }
 
     int viewport(int x, int y, int w, int h, unsigned long s) {
 	int reset = (flag & TRANSFORM_MASK);	 flag = s;
@@ -117,7 +118,7 @@ struct FrameBuffer {
 		flag, x, y, w, h, ppl);
 
 	return 0;
-    };
+    }
 
     void refresh() {	// TODO: implement with templete
 	switch ((flag & TRANSFORM_MASK)){
@@ -133,6 +134,7 @@ struct FrameBuffer {
 		}	src += sgap, dst += dgap;
 	    }
 	}	break;
+
 	case FLIP_WX | SWAP_XY: {
 	    int w, h, dgap = bpl / bpp  - height,
 		    sgap = width * height + 1;
@@ -146,6 +148,7 @@ struct FrameBuffer {
 		}	src += sgap, dst += dgap;
 	    }
 	}	break;
+
 	case SWAP_XY | FLIP_HY: {
 	    int w, h, dgap = bpl / bpp  - height,
 		    sgap = width * height + 1;
@@ -158,6 +161,7 @@ struct FrameBuffer {
 		}	src -= sgap, dst += dgap;
 	    }
 	}	break;
+
 	case FLIP_WX | FLIP_HY: {
 	    int w, h, dgap = bpl / bpp  - width;
 	    pixel_t *dst = (pixel_t*)base,
@@ -167,6 +171,7 @@ struct FrameBuffer {
 		dst += dgap;
 	    }
 	}	break;
+
 	case FLIP_HY: {
 	    int w, h, dgap = bpl / bpp  - width;
 	    pixel_t *dst = (pixel_t*)base,
@@ -177,6 +182,7 @@ struct FrameBuffer {
 		src -= width * 2;	   dst += dgap;
 	    }
 	}	break;
+
 	case FLIP_WX: {
 	    int w, h, dgap = bpl / bpp  - width;
 	    pixel_t *dst = (pixel_t*)base,
@@ -197,9 +203,10 @@ struct FrameBuffer {
 		}	src -= sgap, dst += dgap;
 	    }
 	}	break;
-	default: dtrace;
+
+	default: fprintf(stderr, "Unhandled flag: %lx\n", flag);
 	}
-    };
+    }
 
     // XXX: static
     int fd;

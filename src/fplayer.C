@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: fplayer.c      Thu, 30 Mar 2006 09:44:29 +0800  mhfan $ *
  *                                                              *
@@ -116,7 +116,7 @@ static error_t parse_opts(int key, char* arg, struct argp_state* state)
 
 static void show_version(FILE* stream, struct argp_state* state)
 {   // Show the version number and copyright information.
-    (void)state;			// XXX
+    (void)state;			// XXX:
     // Print in small parts whose localizations can hopefully
     // be copied from other programs.
     fputs(PACKAGE_NAME " " VERSION_STRING "/yyyy.mm.dd ("
@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
     textdomain(PACKAGE_NAME);
     argp_parse(&argp, argc, argv, 0, NULL, NULL);
 
-    for (argc=0; argc < opts.nfile; ++argc) {
+    for (argc = 0; argc < opts.nfile; ++argc) {
 	if (swf.open(opts.files[argc])) swf.play();
 	swf.cloz();
     }

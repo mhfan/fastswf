@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: version.h      Thu, 30 Mar 2006 13:23:19 +0800  mhfan $ *
  *                                                              *
@@ -40,7 +40,7 @@
 
 #define AUTHOR_STRING			AUTHOR_NAME " " AUTHOR_EMAIL
 #else
-const unsigned VERSION_NUMBER = 
+const unsigned VERSION_NUMBER =
 	(VERSION_MAJOR << 16 | VERSION_MINOR <<  8 | VERSION_REVIZ)
 
 const char VERSION_STRING[] =

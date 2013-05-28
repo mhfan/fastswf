@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: sound.hpp      Thu, 06 Apr 2006 14:43:44 +0800  mhfan $ *
  *                                                              *
@@ -40,12 +40,12 @@ struct SoundMixer {
     uint32_t fmt;
     uint16_t rate;
 
-    ~SoundMixer() { close(fd); };
+    ~SoundMixer() { close(fd); }
      SoundMixer(const char* path = DEFAULT_DSP_PATH) {
 	if (fd < 0 && (fd = open(path, O_WRONLY)) < 0)
 	    fprintf(stderr, "%s: %s\n", path, strerror(errno));
-	else ioctl(fd, SNDCTL_DSP_SYNC, 0);	// XXX
-    };
+	else ioctl(fd, SNDCTL_DSP_SYNC, 0);	// XXX:
+    }
 
     void config(uint32_t r = 44100u, bool s16le = true) {
 	uint32_t f = (s16le ? AFMT_S16_LE : AFMT_U8);
@@ -55,9 +55,9 @@ struct SoundMixer {
 	if (rate != r && (ioctl(fd, SNDCTL_DSP_SPEED , &r) < 0 || rate != r))
 	    fprintf(stderr, "To set sound speed (%d): %s\n"
 			  , r, strerror(errno));
-	fprintf(stdout, "Sound device config as %dHz stereo %s\n",
+	fprintf(stdout, "Sound device configured as %dHz stereo %s\n",
 		(rate = r), ((fmt  = f) == AFMT_U8 ? "U8" : "S16LE"));
-    };
+    }
 
     uint32_t play(const uint8_t* buf, uint32_t len) {
 	uint32_t m = 0u;
@@ -69,12 +69,12 @@ struct SoundMixer {
 		}
 	    }	buf += n;	len -= n;   m += n;
 	}   return m;
-    };
+    }
 
     void stop() {
 	if (ioctl(fd, SNDCTL_DSP_RESET, 0) < 0)
 	    fprintf(stderr, "To stop sound: %s\n", strerror(errno));
-    };
+    }
 
 private:
     static int fd;
@@ -91,9 +91,9 @@ struct Audio {
     static const uint8_t STEREO = 0x01, S16LE = 0x02;
     static const uint16_t OUTPUT_BURST = 8192u,
 		 ADPCM_BLOCK_SIZE      = 4096u,
-		 MP3_FRAME_PCM_MAX_LEN = 4608u,	// XXX
+		 MP3_FRAME_PCM_MAX_LEN = 4608u,	// XXX:
 		 OUTPUT_BUFFER_SIZE    = OUTPUT_BURST + MP3_FRAME_PCM_MAX_LEN;
-    static int16_t obuf[OUTPUT_BUFFER_SIZE];	// XXX
+    static int16_t obuf[OUTPUT_BUFFER_SIZE];	// XXX:
 };
 
 struct AudioPCM: public Audio {
@@ -110,11 +110,11 @@ struct AudioPCM: public Audio {
 		*pd++ = smpl,   *pd++ = smpl;
 	    }
 	}
-    };
+    }
 };
 
 struct AudioADPCM: public Audio {
-    bool eod() { return (!(bitn && (uint32_t)(bytp - ibuf) < ilen)); };
+    bool eod() { return (!(bitn && (uint32_t)(bytp - ibuf) < ilen)); }
 
     uint32_t get_bits(uint8_t n, bool s) {
 	uint32_t val = 0x00;	assert(0u < n && n < 33u);
@@ -127,7 +127,7 @@ struct AudioADPCM: public Audio {
 		*bytp &= (0x01 << bitn) - 1u;			m = 0u;
 	    }
 	}   return (s ? EXTEND_SIGN(val, n) : val);
-    };
+    }
 
     void decode(uint8_t flag) {
     static const   int8_t it5[16] = { -1, -1, -1, -1, -1, -1, -1, -1,
@@ -169,11 +169,11 @@ struct AudioADPCM: public Audio {
 	     if (delt & sm) valp[0] -= vpdf; else valp[0] += vpdf;
 
 	     sidx[0] += ixt[(delt & (~sm))];
-	     //if (sidx[0] <  0u) sidx[0] =  0u; else		// XXX
+	     //if (sidx[0] <  0u) sidx[0] =  0u; else		// XXX:
 	     if (88u < sidx[0]) sidx[0] = 88u;
 
 	     //if (valp[0] < SHRT_MIN) valp[0] = SHRT_MIN; else
-	     //if (SHRT_MAX < valp[0]) valp[0] = SHRT_MAX;	// XXX
+	     //if (SHRT_MAX < valp[0]) valp[0] = SHRT_MAX;	// XXX:
 	}   *optr++ = valp[0], *optr++ = valp[0];
     } else for (nb += 2; !eod(); ) {
 	if (((olen += 2) & (0xff << 1)) == 1u) {
@@ -182,7 +182,7 @@ struct AudioADPCM: public Audio {
 		*optr++ = valp[i] = get_bits(16u, SIGNED);
 			  sidx[i] = get_bits( 6u, UNSIGN);
 	    }
-	} else	// XXX
+	} else	// XXX:
 	for (uint8_t i=0u; i < st; ++i) {
 	     uint8_t delt = get_bits(nb, UNSIGN), k = k0,
 		     step = sst[sidx[i]], vpdf = 0u;
@@ -194,16 +194,16 @@ struct AudioADPCM: public Audio {
 	     if (delt & sm) valp[i] -= vpdf; else valp[i] += vpdf;
 
 	     sidx[i] += ixt[(delt & (~sm))];
-	     //if (sidx[i] <  0u) sidx[i] =  0u; else		// XXX
+	     //if (sidx[i] <  0u) sidx[i] =  0u; else		// XXX:
 	     if (88u < sidx[i]) sidx[i] = 88u;
 
 	     //if (valp[i] < SHRT_MIN) valp[i] = SHRT_MIN; else
-	     //if (SHRT_MAX < valp[i]) valp[i] = SHRT_MAX;	// XXX
+	     //if (SHRT_MAX < valp[i]) valp[i] = SHRT_MAX;	// XXX:
 
 	     *optr++ = valp[i];
 	}
     }
-    };
+    }
 
 private:
     uint8_t* bytp;
@@ -218,12 +218,12 @@ struct AudioMP3: public Audio {
 	mad_synth_finish (&synth);
 	mad_frame_finish (&frame);
 	mad_stream_finish(&stream);
-    };
+    }
      AudioMP3() {
 	mad_synth_init (&synth);
 	mad_frame_init (&frame);
 	mad_stream_init(&stream);
-    };
+    }
 
     inline int16_t scale(mad_fixed_t smpl) {
 	smpl += (1L << (MAD_F_FRACBITS - 16));			// round
@@ -240,7 +240,7 @@ struct AudioMP3: public Audio {
 	if (mad_frame_decode (&frame, &stream)) {
 	    switch (stream.error) {
 	    case MAD_ERROR_BUFLEN:	break;
-	    default: std::cerr << "MP3: "	// XXX
+	    default: std::cerr << "MP3: "	// XXX:
 		    << mad_stream_errorstr(&stream) << std::endl;
 	    }
 	} else {
@@ -253,7 +253,7 @@ struct AudioMP3: public Audio {
 	    if (1u < pcm->channels)
 		for (uint32_t i = 0; i < pcm->length; ++i)
 		    *optr++ = scale(*lch++), *optr++ = scale(*rch++); else
-		for (uint32_t i = 0; i < pcm->length; ++i) {	// XXX
+		for (uint32_t i = 0; i < pcm->length; ++i) {	// XXX:
 		    int16_t smpl = scale(*lch++);
 		    *optr++ = smpl, *optr++ = smpl;
 		}
@@ -263,7 +263,7 @@ struct AudioMP3: public Audio {
     }	    if (stream.next_frame)
 		memmove(ibuf, stream.next_frame, (ilen =
 			ibuf + ilen - (uint8_t*)stream.next_frame));
-    };
+    }
 
 private:
 #if 0

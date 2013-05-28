@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: render.hpp     Thu, 06 Apr 2006 14:43:36 +0800  mhfan $ *
  *                                                              *
@@ -25,7 +25,7 @@ namespace SWF {
 struct PlaceObject;
 struct FrameRender {
     //void* priv;
-    virtual ~FrameRender() { };
+    virtual ~FrameRender() { }
     virtual void SetViewport(Rect& br) = 0;
     virtual void SetBackgroundColor(RGB& rgb) = 0;
     virtual void DrawShape(ShapeWithStyle* sws, PlaceObject* pl) = 0;

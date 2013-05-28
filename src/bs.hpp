@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: bs.hpp         Wed, 05 Apr 2006 14:20:59 +0800  mhfan $ *
  *                                                              *
@@ -35,9 +35,9 @@ const bool SIGNED = true, UNSIGN = false;
 struct BitStream {
     uint32_t pos;
 
-    ~BitStream() { close(); };
+    ~BitStream() { close(); }
 
-    void close() { is.reset(); };
+    void close() { is.reset(); }
     void init(std::fstream& fs, bool c) {
 #ifndef	UNSTREAMING_READ
 	if (c) is.push(boost::iostreams::zlib_decompressor());
@@ -45,29 +45,29 @@ struct BitStream {
 #else
 #endif
 	align();	pos = 0u;
-    };
+    }
 
-    bool eof() { return is.eof(); };
-    void align() { curr.bmsk = 0x00; };		// FIXME:
-    void ignore(int32_t n) { is.ignore(n);	pos += n;	align(); };
-    uint32_t read(char* buf, uint32_t n) {	// XXX
+    bool eof() { return is.eof() || is.fail(); }
+    void align() { curr.bmsk = 0x00; }		// FIXME:
+    void ignore(int32_t n) { is.ignore(n);	pos += n;	align(); }
+    uint32_t read(char* buf, uint32_t n) {	// XXX:
 	is.read(buf, n);			pos += n;	return n;
-    };
+    }
     uint32_t read(uint8_t n, bool s) {
 	uint32_t val = 0x00;	assert(n < 33u);
 #if 0
 	for (uint32_t bit = (0x01 << (n - 1u)); bit; bit >>= 1) {
-	    if (curr.bmsk == 0x00)  {	++pos; 
+	    if (curr.bmsk == 0x00)  {	++pos;
 		curr.byte = is.get();
 		curr.bmsk = (0x01 << 7);
 	    }
 	    if (curr.bmsk & curr.byte) val |= bit;
 		curr.bmsk >>= 1;
 	}
-#else
+#else// big-endian bit order
 	for (uint8_t bits = n; 0u < bits;) {
 	    if (curr.bits == 0u) {	curr.bits =  8u;
-		curr.byte = is.get();	++pos;	// XXX
+		curr.byte = is.get();	++pos;	// XXX:
 	    }
 	    if (curr.bits < bits) {
 		val |= ((uint32_t)curr.byte << (bits -= curr.bits));
@@ -79,16 +79,16 @@ struct BitStream {
 	}
 #endif
 	return (s ? signext(val, n) : val);
-    };
+    }
 
     BitStream& operator>>( uint8_t& v) {
 	align();	pos += sizeof(v);
 	is.read((char*)&v, sizeof(v));	return *this;
-    };
+    }
     BitStream& operator>>(  int8_t& v) {
 	align();	pos += sizeof(v);
 	is.read((char*)&v, sizeof(v));	return *this;
-    };
+    }
     BitStream& operator>>(uint16_t& v) {
 	align();	pos += sizeof(v);
 	is.read((char*)&v, sizeof(v));
@@ -96,7 +96,7 @@ struct BitStream {
 	v = bswap_16(v); // XXX: le2ne_16()
 #endif
 	return *this;
-    };
+    }
     BitStream& operator>>( int16_t& v) {
 	align();	pos += sizeof(v);
 	is.read((char*)&v, sizeof(v));
@@ -104,7 +104,7 @@ struct BitStream {
 	v = bswap_16(v); // XXX: le2ne_16()
 #endif
 	return *this;
-    };
+    }
     BitStream& operator>>(uint32_t& v) {
 	align();	pos += sizeof(v);
 	is.read((char*)&v, sizeof(v));
@@ -112,7 +112,7 @@ struct BitStream {
 	v = bswap_32(v); // XXX: le2ne_32()
 #endif
 	return *this;
-    };
+    }
     BitStream& operator>>( int32_t& v) {
 	align();	pos += sizeof(v);
 	is.read((char*)&v, sizeof(v));
@@ -120,17 +120,25 @@ struct BitStream {
 	v = bswap_32(v); // XXX: le2ne_32()
 #endif
 	return *this;
-    };
+    }
+    BitStream& operator>>(   float& v) {
+	align();	pos += sizeof(v);
+	is.read((char*)&v, sizeof(v));
+#if	__BYTE_ORDER == __BIG_ENDIAN
+	v = bswap_32(v); // XXX: le2ne_32()
+#endif
+	return *this;
+    }
 
     BitStream& operator>>(std::string& str) {	align();
 	for (++pos; (curr.byte = is.get()); ++pos)
 	    str.push_back((char)curr.byte);	return *this;
-    };
+    }
 
 private:
     uint32_t signext(uint32_t val, uint8_t nb) {
 	return ((val & (1 << (nb - 1))) ? (val | (-1 << nb)) : val);
-    };
+    }
 #define	EXTEND_SIGN(val, nb) \
 	(val = ((val & (1 << (nb - 1))) ? (val | (-1 << nb)) : val))
 

@@ -1,4 +1,4 @@
-//#!/usr/bin/tcc -run 
+//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: common.h       Mon, 27 Mar 2006 21:26:41 +0800  mhfan $ *
  *                                                              *
@@ -30,6 +30,7 @@
 
 #define	CUBIC_BEZIER			1 // for cairo/twin render
 
+#define ARRAY_SIZE(x)	((unsigned)(sizeof(x) / sizeof((x)[0])))
 #define BITSOF(t)			(sizeof(t) << 3)
 
 #endif//COMMON_H
