@@ -4,7 +4,7 @@
  #                                                              #
  # Description: A general  makefile for program.                #
  #                                                              #
- # Author:      ·¶ÃÀ»Ô  <mhfan@ustc.edu>                        #
+ # Author:      ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  <mhfan@ustc.edu>                        #
  #                                                              #
  # Maintainer:  M.H. Fan  <mhfan@ustc.edu>                      #
  #              Laboratory of Structural Biology                #
@@ -51,6 +51,9 @@ SUFF		+= # already contained(.c .cpp .cxx .cc .C)
 SUBD		:=
 SUBMK		:=
 DEFS		:= -O3 #-DTEST -DDEBUG -g
+#MARCH       := $(shell uname -m)
+MARCH       := x86-64 # avoiding error: cc1plus: error: bad value (â€˜x86_64â€™) for â€˜-march=â€™ switch
+
 
 OBJDIR		:= .obj
 LDFLAGS		:= -Wl,--as-needed \
@@ -60,8 +63,8 @@ SOFLAGS		:= -D_REENTRANT -fPIC -shared -Wl,-soname,$(SONAME)
 CPPFLAGS	:= -MD
 CINC		:= $(INC) $(HOME)/include $(HOME)/include/mhfan
 CFLAGS		:= $(DEFS) -Wall -Wno-multichar -pipe -pthread \
-		    -march=$(shell uname -m) -mtune=k8 -fomit-frame-pointer \
-		    -ffast-math -funroll-loops -fforce-addr \
+		    -march=$(MARCH) -mtune=k8 -fomit-frame-pointer \
+		    -ffast-math -funroll-loops -fforce-addr -fpermissive \
 		    #-finput-charset=GBK -falign-functions=4 \
 		    #-Wunused -Wno-implicit
 CLIB		:= #l ??? # (e.g.:alleg,stdcx,iostr,etc)
