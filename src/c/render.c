@@ -4,7 +4,7 @@
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  ·¶ÃÀ»Ô(MeiHui FAN)  <mhfan@ustc.edu>            *
+ * Maintainer:  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(MeiHui FAN)  <mhfan@ustc.edu>            *
  *                                                              *
  * CopyRight (c)  2006  M.H.Fan                                 *
  *   All rights reserved.                                       *
@@ -48,10 +48,10 @@ static int render_cairo_init(struct swf_render* render, struct swf_rect* rect)
     switch (fb->depth) {
     case  1: fmt = CAIRO_FORMAT_A1;     break;
     case  8: fmt = CAIRO_FORMAT_A8;     break;
-    case 16: fmt = CAIRO_FORMAT_RGB16;  break;
+    case 16: fmt = CAIRO_FORMAT_RGB16_565;  break;
     case 24: fmt = CAIRO_FORMAT_RGB24;  break;
     case 32: fmt = CAIRO_FORMAT_ARGB32; break;
-    default: fmt = CAIRO_FORMAT_RGB16;  break;
+    default: fmt = CAIRO_FORMAT_RGB16_565;  break;
     }
 
     render_cairo.fb = fb;
