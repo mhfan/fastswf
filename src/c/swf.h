@@ -4,7 +4,7 @@
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  ·¶ÃÀ»Ô(MeiHui FAN)  <mhfan@ustc.edu>            *
+ * Maintainer:  èŒƒç¾Žè¾‰(MeiHui FAN)  <mhfan@ustc.edu>            *
  *                                                              *
  * CopyRight (c)  2006  M.H.Fan                                 *
  *   All rights reserved.                                       *
@@ -37,33 +37,33 @@
  *  and not as a format for exchanging graphics between graphics editors. It
  *  was designed to meet the following goals:
  *
- *  * On-screen Display¡ªThe format is primarily intended for on-screen
+ *  * On-screen Displayâ€”The format is primarily intended for on-screen
  *  display and so it supports anti-aliasing, fast rendering to a bitmap of
  *  any color format, animation and interactive buttons.
  *
- *  * Extensibility¡ªThe format is a tagged format, so the format can be
+ *  * Extensibilityâ€”The format is a tagged format, so the format can be
  *  evolved with new features while maintaining backward compatibility with
  *  older players.
  *
- *  * Network Delivery¡ªThe files can be delivered over a network with limited
+ *  * Network Deliveryâ€”The files can be delivered over a network with limited
  *  and unpredictable bandwidth. The files are compressed to be small and
  *  support incremental rendering through streaming. SWF is a binary format
  *  and is not human readable like HTML. Macromedia Flash (SWF) uses
  *  techniques such as bit-packing and structures with optional fields, to
  *  minimize file size.
  *
- *  * Simplicity¡ªThe format is simple so that the player is small and easily
+ *  * Simplicityâ€”The format is simple so that the player is small and easily
  *  ported. Also, the player depends upon only a very limited set of operating
  *  system functionality.
  *
- *  * File Independence¡ªFiles can be displayed without any dependence on
+ *  * File Independenceâ€”Files can be displayed without any dependence on
  *  external resources such as fonts.
  *
- *  * Scalability¡ªDifferent computers have different monitor resolutions and
+ *  * Scalabilityâ€”Different computers have different monitor resolutions and
  *  bit depths. Files work well on limited hardware, while taking advantage of
  *  more expensive hardware when it is available.
  *
- *  * Speed¡ªThe files are designed to be rendered at a high quality very
+ *  * Speedâ€”The files are designed to be rendered at a high quality very
  *  quickly.
  */
 
@@ -74,23 +74,23 @@
  * important that they be as compact as possible. There are several techniques
  * that are used to accomplish this:
  *
- *  * Reuse¡ªThe structure of the character dictionary makes it very easy to
+ *  * Reuseâ€”The structure of the character dictionary makes it very easy to
  *  reuse elements in a SWF file. For example, a shape, button, sound, font,
  *  or bitmap can be stored in a file once and referenced many times.
  *
- *  * Compression¡ªThe contents of tags are compressed. SWF supports a variety
+ *  * Compressionâ€”The contents of tags are compressed. SWF supports a variety
  *  of compression techniques. Bitmaps can be compressed with JPEG or a
  *  PNG-like zlib compression. Sound is compressed with various levels of
  *  ADPCM compression. Shapes are compressed using a very efficient delta
  *  encoding scheme.
  *
- *  * Bit Packing¡ªWhenever possible, numbers are packed into the smallest
+ *  * Bit Packingâ€”Whenever possible, numbers are packed into the smallest
  *  possible number of bits for a particular value. Coordinates are commonly
  *  stored using variable-sized bit fields, where a few bits are used to
  *  indicate how many bits are needed by subsequent values. See RECT for an
  *  example.
  *
- *  * Default values¡ªSome structures like matrices and color transforms have
+ *  * Default valuesâ€”Some structures like matrices and color transforms have
  *  common fields that are used more often than others. For example, for a
  *  matrix, the most common field is the translation field. Scaling and
  *  rotation are less common. Therefore if the scaling field is not present,
@@ -98,11 +98,11 @@
  *  assumed that there is no rotation. This use of default values helps to
  *  minimize file sizes.
  *
- *  * Change Encoding¡ªAs a rule, SWF files just store the changes between
+ *  * Change Encodingâ€”As a rule, SWF files just store the changes between
  *  states. This is reflected in shape data structures and in the
  *  place/move/remove model used by the display list.
  *
- *  * Shape Data Structure¡ªThe shape data structure uses a unique structure
+ *  * Shape Data Structureâ€”The shape data structure uses a unique structure
  *  to minimize the size of shapes and to render anti-aliased shapes very
  *  efficiently on the screen.
  *

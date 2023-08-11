@@ -3,7 +3,7 @@
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Author:      ·¶ÃÀ»Ô  <mhfan@ustc.edu>                        *
+ * Author:      èŒƒç¾Žè¾‰  <mhfan@ustc.edu>                        *
  *                                                              *
  * Maintainer:  M.H. Fan  <mhfan@ustc.edu>                      *
  *              Laboratory of Structural Biology                *

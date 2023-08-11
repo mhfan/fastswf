@@ -4,7 +4,7 @@
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  ·¶ÃÀ»Ô(MeiHui FAN)  <mhfan@ustc.edu>            *
+ * Maintainer:  èŒƒç¾Žè¾‰(MeiHui FAN)  <mhfan@ustc.edu>            *
  *                                                              *
  * CopyRight (c)  2006  M.H.Fan                                 *
  *   All rights reserved.                                       *
@@ -20,7 +20,7 @@
  * Displaying a frame of a Macromedia Flash movie is a three-stage process:
  *
  * 1. Objects are defined with definition tags such as DefineShape ,
- * DefineSprite etc. Each object is given a unique ID called a character¡ª,
+ * DefineSprite etc. Each object is given a unique ID called a characterâ€”,
  * and stored in a repository called the dictionary.
  *
  * 2. Selected characters are copied from the dictionary and placed on the

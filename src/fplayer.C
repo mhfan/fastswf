@@ -4,7 +4,7 @@
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  ·¶ÃÀ»Ô(Meihui Fan)  <mhfan@ustc.edu>            *
+ * Maintainer:  èŒƒç¾Žè¾‰(Meihui Fan)  <mhfan@ustc.edu>            *
  *                                                              *
  * CopyRight (c)  2006  M.H.Fan                                 *
  *   All rights reserved.                                       *

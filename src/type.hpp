@@ -4,7 +4,7 @@
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  ·¶ÃÀ»Ô(MeiHui FAN)  <mhfan@ustc.edu>            *
+ * Maintainer:  èŒƒç¾Žè¾‰(MeiHui FAN)  <mhfan@ustc.edu>            *
  *                                                              *
  * CopyRight (c)  2006  M.H.Fan                                 *
  *   All rights reserved.                                       *
@@ -271,7 +271,7 @@ struct EncodedU32 {
  * indicate the encoding that is used; instead, the decoding choice is made
  * according to the locale in which Flash Player is running. This means that
  * text content in SWF 5 or earlier can only be encoded in ANSI or shift-JIS,
- * and the target audience must be known during authoring¡ªotherwise garbled
+ * and the target audience must be known during authoringâ€”otherwise garbled
  * text results.
  *
  * In SWF 6 or later, STRING values are always encoded by using the Unicode
@@ -1425,7 +1425,7 @@ struct MorphShapeWithStyle {
  * number of shape attributes to vary during the morph. Macromedia Flash (SWF)
  * defines only the start and end states of the morph. The Macromedia Flash
  * Player is responsible for interpolating between the end-points and
- * generating the ¡®in-between¡¯ states.
+ * generating the â€˜in-betweenâ€™ states.
  *
  * The shape attributes that can be varied during the morph are:
  * * The position of each edge in the shape.

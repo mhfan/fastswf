@@ -3,7 +3,7 @@
  *                                                             *
  * Description:                                                *
  *                                                             *
- * Author:      ·¶ÃÀ»Ô  <mhfan@ustc.edu>                       *
+ * Author:      èŒƒç¾Žè¾‰  <mhfan@ustc.edu>                       *
  *                                                             *
  * Maintainer:  M.H. Fan  <mhfan@ustc.edu>                     *
  *              Laboratory of Structural Biology               *
@@ -36,13 +36,13 @@
 #endif
 
 /*
- * ÔÚIntel PentiumÒÔÉÏ¼¶±ð(¼°Æä¼æÈÝÐÍ)µÄCPUÖÐ£¬ÓÐÒ»¸ö³ÆÎªÊ±¼ä´Á£¨Time Stamp£©
- * µÄ²¿¼þ£¬ËüÒÔ64Î»ÎÞ·ûºÅÕûÐÍÊýµÄ¸ñÊ½£¬¼ÇÂ¼ÁË×ÔCPUÉÏµçÒÔÀ´Ëù¾­¹ýµÄÊ±ÖÓÖÜÆÚÊý¡£
+ * åœ¨Intel Pentiumä»¥ä¸Šçº§åˆ«(åŠå…¶å…¼å®¹åž‹)çš„CPUä¸­ï¼Œæœ‰ä¸€ä¸ªç§°ä¸ºæ—¶é—´æˆ³ï¼ˆTime Stampï¼‰
+ * çš„éƒ¨ä»¶ï¼Œå®ƒä»¥64ä½æ— ç¬¦å·æ•´åž‹æ•°çš„æ ¼å¼ï¼Œè®°å½•äº†è‡ªCPUä¸Šç”µä»¥æ¥æ‰€ç»è¿‡çš„æ—¶é’Ÿå‘¨æœŸæ•°ã€‚
  *
- * X86Ö¸Áî¼¯Ìá¹©ÁËÒ»Ìõ»úÆ÷Ö¸ÁîRDTSC£¨Read Time Stamp Counter£©À´¶ÁÈ¡Õâ¸öÊ±¼ä´Á
- * µÄÊý×Ö£¬²¢½«Æä±£´æÔÚEDX:EAX¼Ä´æÆ÷¶ÔÖÐ¡£ÓÉÓÚEDX:EAX¼Ä´æÆ÷¶ÔÇ¡ºÃÊÇWin32/Linux
- * Æ½Ì¨ÏÂC++ÓïÑÔ±£´æº¯Êý·µ»ØÖµµÄ¼Ä´æÆ÷£¬ËùÒÔÎÒÃÇ¿ÉÒÔ°ÑÕâÌõÖ¸Áî¿´³ÉÊÇÒ»¸öÆÕÍ¨µÄ
- * º¯Êýµ÷ÓÃ¡£
+ * X86æŒ‡ä»¤é›†æä¾›äº†ä¸€æ¡æœºå™¨æŒ‡ä»¤RDTSCï¼ˆRead Time Stamp Counterï¼‰æ¥è¯»å–è¿™ä¸ªæ—¶é—´æˆ³
+ * çš„æ•°å­—ï¼Œå¹¶å°†å…¶ä¿å­˜åœ¨EDX:EAXå¯„å­˜å™¨å¯¹ä¸­ã€‚ç”±äºŽEDX:EAXå¯„å­˜å™¨å¯¹æ°å¥½æ˜¯Win32/Linux
+ * å¹³å°ä¸‹C++è¯­è¨€ä¿å­˜å‡½æ•°è¿”å›žå€¼çš„å¯„å­˜å™¨ï¼Œæ‰€ä»¥æˆ‘ä»¬å¯ä»¥æŠŠè¿™æ¡æŒ‡ä»¤çœ‹æˆæ˜¯ä¸€ä¸ªæ™®é€šçš„
+ * å‡½æ•°è°ƒç”¨ã€‚
  */
 
 inline uint64_t rdtsc ()

@@ -4,7 +4,7 @@
  #                                                              #
  # Description: A general  makefile for program.                #
  #                                                              #
- # Author:      ������  <mhfan@ustc.edu>                        #
+ # Author:      范美辉  <mhfan@ustc.edu>                        #
  #                                                              #
  # Maintainer:  M.H. Fan  <mhfan@ustc.edu>                      #
  #              Laboratory of Structural Biology                #

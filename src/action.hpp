@@ -4,7 +4,7 @@
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  ·¶ÃÀ»Ô(MeiHui FAN)  <mhfan@ustc.edu>            *
+ * Maintainer:  èŒƒç¾Žè¾‰(MeiHui FAN)  <mhfan@ustc.edu>            *
  *                                                              *
  * CopyRight (c)  2006  M.H.Fan                                 *
  *   All rights reserved.                                       *
@@ -972,7 +972,7 @@ enum ActionCode {
      * the destination page using GET or POST (this means you can create
      * dynamic forms with full HTML conformance).
      *
-     * It seems that in V4.x (or would it be in V6.x?!? ¡ª it doesn't seem to
+     * It seems that in V4.x (or would it be in V6.x?!? â€” it doesn't seem to
      * work in V5.x) you could use URL2 to read a text file (with a .txt
      * extension) with a list of variables using something like this:
      *	    Push URL "myvars.txt", Target "_level0"; Get URL2;

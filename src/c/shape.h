@@ -4,7 +4,7 @@
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  ·¶ÃÀ»Ô(MeiHui FAN)  <mhfan@ustc.edu>            *
+ * Maintainer:  èŒƒç¾Žè¾‰(MeiHui FAN)  <mhfan@ustc.edu>            *
  *                                                              *
  * CopyRight (c)  2006  M.H.Fan                                 *
  *   All rights reserved.                                       *
@@ -21,14 +21,14 @@
 /*
  * A shape is comprised of the following elements:
  *
- *  * CharacterId ¡ª A 16-bit value that uniquely identifies this shape as a
- *  ¡®character¡¯ in the dictionary. The CharacterId can be referred to in
+ *  * CharacterId â€” A 16-bit value that uniquely identifies this shape as a
+ *  â€˜characterâ€™ in the dictionary. The CharacterId can be referred to in
  *  control tags such as PlaceObject. Characters can be re-used and combined
  *  with other characters to make more complex shapes.
- *  * Bounding box ¡ª The rectangle that completely encloses the shape.
- *  * Fill style array ¡ª A list of all the fill styles used in a shape.
- *  * Line style array ¡ª A list of all the line styles used in a shape.
- *  * Shape-record array ¡ª A list of shape-records. Shape-records can define
+ *  * Bounding box â€” The rectangle that completely encloses the shape.
+ *  * Fill style array â€” A list of all the fill styles used in a shape.
+ *  * Line style array â€” A list of all the line styles used in a shape.
+ *  * Shape-record array â€” A list of shape-records. Shape-records can define
  *  straight or curved edges, style changes, or move the drawing position.
  *
  * Note: Line and fill styles are defined once only, and may be used (and
