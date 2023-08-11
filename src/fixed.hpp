@@ -1,13 +1,11 @@
-//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: fixed.hpp      Wed, 05 Apr 2006 13:59:29 +0800  mhfan $ *
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  范美辉(MeiHui FAN)  <mhfan@ustc.edu>            *
+ * Maintainer: 范美辉 (MeiHui FAN) <mhfan@ustc.edu>             *
  *                                                              *
- * CopyRight (c)  2006  M.H.Fan                                 *
- *   All rights reserved.                                       *
+ * Copyright (c) 2006 M.H.Fan, All rights reserved.             *
  *                                                              *
  * This file is free software;                                  *
  *   you are free to modify and/or redistribute it              *
@@ -219,7 +217,6 @@ static const uint16_t ANGLE_360 = (ANGLE_90 << 2);
 static const uint16_t ANGLE_270 = (ANGLE_90 + ANGLE_180);
 static const uint16_t sin16_table[0x01 << LOG2_SIN] = {
 /* Construction:
-tcc -run - << EOF
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>

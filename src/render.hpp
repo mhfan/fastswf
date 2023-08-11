@@ -1,13 +1,11 @@
-//#!/usr/bin/tcc -run
 /****************************************************************
  * $ID: render.hpp     Thu, 06 Apr 2006 14:43:36 +0800  mhfan $ *
  *                                                              *
  * Description:                                                 *
  *                                                              *
- * Maintainer:  范美辉(MeiHui FAN)  <mhfan@ustc.edu>            *
+ * Maintainer: 范美辉 (MeiHui FAN) <mhfan@ustc.edu>             *
  *                                                              *
- * CopyRight (c)  2006  M.H.Fan                                 *
- *   All rights reserved.                                       *
+ * Copyright (c) 2006 M.H.Fan, All rights reserved.             *
  *                                                              *
  * This file is free software;                                  *
  *   you are free to modify and/or redistribute it              *

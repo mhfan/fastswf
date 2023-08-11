@@ -2,35 +2,32 @@
  ################################################################
  # $ID: Makefile        Sun Oct 27 13:56:17 2002 CST noclouds $ #
  #                                                              #
- # Description: A general  makefile for program.                #
+ # Description: A general makefile for program.                 #
  #                                                              #
- # Author:      范美辉  <mhfan@ustc.edu>                        #
+ # Author:      范美辉 (MeiHui FAN) <mhfan@ustc.edu>             #
  #                                                              #
- # Maintainer:  M.H. Fan  <mhfan@ustc.edu>                      #
+ # Maintainer:  MeiHui FAN <mhfan@ustc.edu>                     #
  #              Laboratory of Structural Biology                #
  #              School of Life Science                          #
- #              Univ. of Sci.& Tech. of China (USTC)	        #
+ #              Univ. of Sci. & Tech. of China (USTC)           #
  #              People's Republic of China (PRC)                #
  #                                                              #
- # CopyRight (c)  2005  M.H.Fan                                 #
- # CopyRight (c)  2003  Meihui Fan                              #
- #   All rights reserved.                                       #
+ # Copyright (c) 2003 M.H.Fan, All rights reserved.             #
  #                                                              #
  # This file is free software;                                  #
- #   you are free to modify and/or redistribute it  	        #
+ #   you are free to modify and/or redistribute it              #
  #   under the terms of the GNU General Public Licence.         #
  #                                                              #
  # No warranty, no liability; use this at your own risk!        #
  #                                                              #
- # George Foot 2001-02-16 13:56:40			        #
- # email: george.foot@merton.ox.ac.uk			        #
+ # George Foot 2001-02-16 13:56:40                              #
+ # email: george.foot@merton.ox.ac.uk                           #
  #                                                              #
- # Copyright (c) 1997 George Foot			        #
- #      All rights reserved.				        #
+ # Copyright (c) 1997 George Foot, All rights reserved.         #
  #                                                              #
  # No warranty,no liability; you use this at your own risk.     #
- # You are free to modify and distribute this		        #
- #  without giving credit to the original author.	        #
+ # You are free to modify and distribute this                   #
+ #  without giving credit to the original author.               #
  ################################################################
 
 ### Customising

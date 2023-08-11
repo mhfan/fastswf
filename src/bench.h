@@ -11,8 +11,7 @@
  *              Univ. of Sci.& Tech. of China (USTC)           *
  *              People's Republic of China (PRC)               *
  *                                                             *
- * CopyRight (c)  2003  MeiHui FAN                             *
- *   All rights reserved.                                      *
+ * Copyright (c) 2006 M.H.Fan, All rights reserved.             *
  *                                                             *
  * This file is free software;                                 *
  *   you are free to modify and/or redistribute it             *
