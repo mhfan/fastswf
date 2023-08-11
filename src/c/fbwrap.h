@@ -21,7 +21,9 @@
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#ifndef __APPLE__
 #include <linux/fb.h>
+#endif
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 

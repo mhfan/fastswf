@@ -23,6 +23,7 @@
 #define BENCH_H
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
@@ -47,7 +48,11 @@
 inline uint64_t rdtsc ()
 {
     uint64_t dst;
+#ifdef  __aarch64__
+    asm volatile("mrs %0, cntvct_el0" : "=r" (dst));
+#elif defined(__x86_64__)
     asm volatile ("RDTSC\n" : "=A" (dst));      // compatible with ANSI C.
+#endif
     // asm volatile ("RDTSC");
     // asm ("_emit 0x0F\r\t"    "_emit 0x31");  // for cpp
     // asm ("_emit 0x0F; _emit 0x31");

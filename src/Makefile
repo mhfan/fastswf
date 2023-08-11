@@ -39,7 +39,7 @@
 #		  #python unit_test_framework prg_exec_monitor test_exec_monitor
 
 ## don't need to add -I and -l prefix!
-INC		 = /usr/include/cairo /usr/include/boost
+INC		 = /opt/homebrew/include /opt/homebrew/include/cairo
 LIBS 		 = jpeg z mad twin cairo $(CXXLIBS) $(CLIBS)
 EXECS 		:= fplayer
 SONAME		:=
@@ -48,22 +48,19 @@ SUFF		+= # already contained(.c .cpp .cxx .cc .C)
 SUBD		:=
 SUBMK		:=
 DEFS		:= -O3 #-DTEST -DDEBUG -g
-#MARCH       := $(shell uname -m)
-MARCH       := x86-64 # avoiding error: cc1plus: error: bad value (‘x86_64’) for ‘-march=’ switch
-
+MARCH       := x86-64 # avoiding error: bad value (‘x86_64’) #$(shell uname -m)
 
 OBJDIR		:= .obj
-LDFLAGS		:= -Wl,--as-needed \
+LDFLAGS		:= -L/opt/homebrew/lib #-Wl,--as-needed \
 		#-L/usr/local/src/cairo-git/twin/.libs \
 		#-L$(HOME)/lib -L$(HOME)/lib/mhfan #-L$(BOOSTLIBDIR)
 SOFLAGS		:= -D_REENTRANT -fPIC -shared -Wl,-soname,$(SONAME)
 CPPFLAGS	:= -MD
 CINC		:= $(INC) $(HOME)/include $(HOME)/include/mhfan
-CFLAGS		:= $(DEFS) -Wall -Wno-multichar -pipe -pthread \
-		    -march=$(MARCH) -mtune=k8 -fomit-frame-pointer \
-		    -ffast-math -funroll-loops -fforce-addr -fpermissive \
+CFLAGS		:= $(DEFS) -Wall -Wno-multichar -pipe -pthread -fomit-frame-pointer \
+		    -ffast-math -funroll-loops -fforce-addr -Wno-misleading-indentation \
 		    #-finput-charset=GBK -falign-functions=4 \
-		    #-Wunused -Wno-implicit
+		    #-march=$(MARCH) -mtune=k8 #-Wunused -Wno-implicit
 CLIB		:= #l ??? # (e.g.:alleg,stdcx,iostr,etc)
 CXXINC		:= $(CINC) $(BOOSTINCDIR)
 CXXFLAGS	:= $(CFLAGS)
@@ -75,8 +72,8 @@ FFLAGS		:=
 ARFLAGS		:= crusv	    # for static library
 
 	# Now alter any implicit rules' variables if you like.
-CC		:= gcc #-s
-CXX		:= g++ #-s
+CC		:= gcc-13 #-s
+CXX		:= g++-13 #-s
 LINKER		:= $(CXX)
 LEX		:= flex
 YACC		:= bison

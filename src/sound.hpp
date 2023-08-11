@@ -25,7 +25,9 @@ extern "C" {
 #include <unistd.h>
 
 #include <sys/ioctl.h>
+#ifndef __APPLE__
 #include <sys/soundcard.h>
+#endif
 
 #include <mad.h>
 };
@@ -42,10 +44,13 @@ struct SoundMixer {
      SoundMixer(const char* path = DEFAULT_DSP_PATH) {
         if (fd < 0 && (fd = open(path, O_WRONLY)) < 0)
             fprintf(stderr, "%s: %s\n", path, strerror(errno));
+#ifdef  SOUNDCARD_H
         else ioctl(fd, SNDCTL_DSP_SYNC, 0);     // XXX:
+#endif
     }
 
     void config(uint32_t r = 44100u, bool s16le = true) {
+#ifdef  SOUNDCARD_H
         uint32_t f = (s16le ? AFMT_S16_LE : AFMT_U8);
         if (fmt  != f && (ioctl(fd, SNDCTL_DSP_SETFMT, &f) < 0 || fmt  != f))
             fprintf(stderr, "To set sound format(%x): %s\n"
@@ -55,6 +60,7 @@ struct SoundMixer {
                           , r, strerror(errno));
         fprintf(stdout, "Sound device configured as %dHz stereo %s\n",
                 (rate = r), ((fmt  = f) == AFMT_U8 ? "U8" : "S16LE"));
+#endif
     }
 
     uint32_t play(const uint8_t* buf, uint32_t len) {
@@ -70,8 +76,10 @@ struct SoundMixer {
     }
 
     void stop() {
+#ifdef  SOUNDCARD_H
         if (ioctl(fd, SNDCTL_DSP_RESET, 0) < 0)
             fprintf(stderr, "To stop sound: %s\n", strerror(errno));
+#endif
     }
 
 private:

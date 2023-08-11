@@ -183,7 +183,7 @@ struct swf {
 };
 
 struct swf* swf_open(char* path);
-int swf_decode(struct swf* swf);
+int swf_decode_frame(struct swf* swf);
 int swf_close (struct swf* swf);
 
 #endif//SWF_H

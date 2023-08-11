@@ -14,6 +14,7 @@
 
 #include "zs.h"
 #include "swf.h"
+#include "utils.h"
 #include "common.h"
 
 int swf_decode_frame(struct swf* swf)

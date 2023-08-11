@@ -16,5 +16,5 @@ make
 Play
 
 ```
-/fplayer ../doc/race.swf
+./fplayer ../doc/race.swf
 ```

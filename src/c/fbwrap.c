@@ -24,6 +24,7 @@ void fbunin(struct Framebuffer* fb)
 
 int  fbinit(struct Framebuffer* fb, char* path)
 {
+#ifdef  _LINUX_FB_H
     struct fb_fix_screeninfo finfo;
     struct fb_var_screeninfo vinfo;
 
@@ -43,6 +44,7 @@ int  fbinit(struct Framebuffer* fb, char* path)
                 vinfo.green.length + vinfo.transp.length;
     fb->bpp   =(vinfo.bits_per_pixel + 7) / 8;  // XXX
     fb->bpl   = finfo.line_length; //vinfo.xres * fb->bpp;
+#endif
 
     fprintf(stdout, "FB: %dx%d@%d; ", fb->xres, fb->yres, fb->depth);
 

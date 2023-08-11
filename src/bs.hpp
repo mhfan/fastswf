@@ -16,10 +16,19 @@
 
 #include <fstream>
 
-#define HAVE_BYTESWAP_H 1       // XXX:
-
 #include "common.h"
 //#include "bswap.h"
+
+#define HAVE_BYTESWAP_H 1       // XXX:
+//#include <byteswap.h>
+
+#if defined(__APPLE__)
+// Mac OS X / Darwin features
+#include <libkern/OSByteOrder.h>
+#define bswap_16(x) OSSwapInt16(x)
+#define bswap_32(x) OSSwapInt32(x)
+#define bswap_64(x) OSSwapInt64(x)
+#endif
 
 #ifndef UNSTREAMING_READ
 #include <boost/iostreams/filtering_stream.hpp>

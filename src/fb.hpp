@@ -23,7 +23,9 @@ extern "C" {
 #include <string.h>
 #include <stdint.h>
 #include <unistd.h>
+#ifndef __APPLE__
 #include <linux/fb.h>
+#endif
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
@@ -57,6 +59,7 @@ struct FrameBuffer {
     }
 
      FrameBuffer(const char* path = DEFAULT_FBDEV_PATH) {
+#ifdef  _LINUX_FB_H
         struct fb_fix_screeninfo finfo;
         struct fb_var_screeninfo vinfo;
 
@@ -79,6 +82,7 @@ struct FrameBuffer {
         bpl   = finfo.line_length; //vinfo.xres * bpp;
 
         fprintf(stdout, "FB: %dx%d@%d; ", xres, yres, depth);
+#endif
     }
 
     int viewport(int x, int y, int w, int h, unsigned long s) {
