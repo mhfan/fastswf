@@ -14,16 +14,14 @@
 
 #include "fbwrap.h"
 
-void fbunin(struct Framebuffer* fb)
-{
+void fbunin(struct Framebuffer* fb) {
     if (fb->scr && munmap(fb->scr, fb->size) < 0)
         fprintf(stderr, "Unmap frame buffer: %s\n", strerror(errno));
     if (fb->flag & FB_TRANSFORM_MASK) free(fb->pixels);
     if (0 < fb->fd) close(fb->fd);
 }
 
-int  fbinit(struct Framebuffer* fb, char* path)
-{
+int  fbinit(struct Framebuffer* fb, char* path) {
 #ifdef  _LINUX_FB_H
     struct fb_fix_screeninfo finfo;
     struct fb_var_screeninfo vinfo;
@@ -51,8 +49,7 @@ int  fbinit(struct Framebuffer* fb, char* path)
     return 0;
 }
 
-int  fbsetp(struct Framebuffer* fb, int x, int y, int w, int h, int s)
-{
+int  fbsetp(struct Framebuffer* fb, int x, int y, int w, int h, int s) {
     int reset = (fb->flag & FB_TRANSFORM_MASK);  fb->flag = s;
 
     if (w < 0) w = -w, fb->flag =      (fb->flag & FB_FLIP_WX) ?
@@ -89,8 +86,7 @@ int  fbsetp(struct Framebuffer* fb, int x, int y, int w, int h, int s)
     return 0;
 }
 
-void fbrefr(struct Framebuffer* fb)
-{
+void fbrefr(struct Framebuffer* fb) {
     switch ((fb->flag & FB_TRANSFORM_MASK)){
     case FB_FLIP_WX | FB_FLIP_HY | FB_SWAP_XY: {
         int w, h, dgap = fb->bpl / fb->bpp  - fb->height,

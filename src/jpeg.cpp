@@ -16,11 +16,11 @@
 
 // TODO: wrap into a class
 
-void js_init_ource(struct jpeg_decompress_struct* jpds)
-        { jpds->src->bytes_in_buffer = 0; }
+void js_init_ource(struct jpeg_decompress_struct* jpds) {
+    jpds->src->bytes_in_buffer = 0;
+}
 
-boolean js_fill_input_buffer(struct jpeg_decompress_struct* jpds)
-{
+boolean js_fill_input_buffer(struct jpeg_decompress_struct* jpds) {
     struct JPEGClient* jclt = (struct JPEGClient*)jpds->client_data;
     if (jclt->data) {
         jpds->src->next_input_byte = (JOCTET*)jclt->data;
@@ -29,8 +29,7 @@ boolean js_fill_input_buffer(struct jpeg_decompress_struct* jpds)
     }   return TRUE;
 }
 
-void js_skip_input_data(struct jpeg_decompress_struct* jpds, long count)
-{
+void js_skip_input_data(struct jpeg_decompress_struct* jpds, long count) {
     jpds->src->next_input_byte += count;
     jpds->src->bytes_in_buffer -= count;
 }
@@ -42,8 +41,7 @@ boolean js_resync_to_restart(struct jpeg_decompress_struct* jpds, int desired)
 
 void js_term_source(struct jpeg_decompress_struct* jpds) { }
 
-void j_error_exit(struct jpeg_common_struct* jpds)
-{
+void j_error_exit(struct jpeg_common_struct* jpds) {
     struct JPEGClient* jclt = (struct JPEGClient*)jpds->client_data;
     (jpds->err->output_message)(jpds);
     longjmp(jclt->jbuf, 1);

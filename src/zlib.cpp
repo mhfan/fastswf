@@ -74,8 +74,7 @@ zlib_error::zlib_error(int error)
     : BOOST_IOSTREAMS_FAILURE("zlib error"), error_(error)
     { }
 
-void zlib_error::check BOOST_PREVENT_MACRO_SUBSTITUTION(int error)
-{
+void zlib_error::check BOOST_PREVENT_MACRO_SUBSTITUTION(int error) {
     switch (error) {
     case Z_OK:
     case Z_STREAM_END:
@@ -93,15 +92,13 @@ void zlib_error::check BOOST_PREVENT_MACRO_SUBSTITUTION(int error)
 
 namespace detail {
 
-zlib_base::zlib_base()
-    : stream_(new z_stream), calculate_crc_(false), crc_(0), crc_imp_(0)
-    { }
+zlib_base::zlib_base(): stream_(new z_stream), calculate_crc_(false),
+    crc_(0), crc_imp_(0) { }
 
 zlib_base::~zlib_base() { delete static_cast<z_stream*>(stream_); }
 
-void zlib_base::before( const char*& src_begin, const char* src_end,
-                        char*& dest_begin, char* dest_end )
-{
+void zlib_base::before(const char*& src_begin, const char* src_end,
+    char*& dest_begin, char* dest_end) {
     z_stream* s = static_cast<z_stream*>(stream_);
     s->next_in = reinterpret_cast<zlib::byte*>(const_cast<char*>(src_begin));
     s->avail_in = static_cast<zlib::uint>(src_end - src_begin);
@@ -109,8 +106,7 @@ void zlib_base::before( const char*& src_begin, const char* src_end,
     s->avail_out= static_cast<zlib::uint>(dest_end - dest_begin);
 }
 
-void zlib_base::after(const char*& src_begin, char*& dest_begin, bool compress)
-{
+void zlib_base::after(const char*& src_begin, char*& dest_begin, bool compress) {
     z_stream* s = static_cast<z_stream*>(stream_);
     char* next_in = reinterpret_cast<char*>(s->next_in);
     char* next_out = reinterpret_cast<char*>(s->next_out);
@@ -132,37 +128,30 @@ void zlib_base::after(const char*& src_begin, char*& dest_begin, bool compress)
     dest_begin = next_out;
 }
 
-int zlib_base::xdeflate(int flush)
-{
+int zlib_base::xdeflate(int flush) {
     return ::deflate(static_cast<z_stream*>(stream_), flush);
 }
 
-int zlib_base::xinflate(int flush)
-{
+int zlib_base::xinflate(int flush) {
     return ::inflate(static_cast<z_stream*>(stream_), flush);
 }
 
-void zlib_base::reset(bool compress, bool realloc)
-{
+void zlib_base::reset(bool compress, bool realloc) {
     z_stream* s = static_cast<z_stream*>(stream_);
     // Undiagnosed bug:
     // deflateReset(), etc., return Z_DATA_ERROR
     //zlib_error::check BOOST_PREVENT_MACRO_SUBSTITUTION(
-        realloc ?
-            (compress ? deflateReset(s) : inflateReset(s)) :
-            (compress ? deflateEnd(s) : inflateEnd(s))
-                ;
+        realloc ? (compress ? deflateReset(s) : inflateReset(s)) :
+                  (compress ? deflateEnd(s)   : inflateEnd(s));
     //);
     crc_imp_ = 0;
 }
 
-void zlib_base::do_init
-    ( const zlib_params& p, bool compress,
-      #if !BOOST_WORKAROUND(BOOST_MSVC, < 1300)
-          zlib::xalloc_func /* alloc */, zlib::xfree_func /* free*/,
-      #endif
-      void* derived )
-{
+void zlib_base::do_init(const zlib_params& p, bool compress,
+#if !BOOST_WORKAROUND(BOOST_MSVC, < 1300)
+    zlib::xalloc_func /* alloc */, zlib::xfree_func /* free*/,
+#endif
+    void* derived) {
     calculate_crc_ = p.calculate_crc;
     z_stream* s = static_cast<z_stream*>(stream_);
 

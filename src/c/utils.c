@@ -15,9 +15,8 @@
 #include "utils.h"
 #include "common.h"
 
-char* compact_path(char* path, int size)
-{   // TODO: to make the path compacted in fixed size length
-    return path;
+char* compact_path(char* path, int size) {
+    return path;    // TODO: to make the path compacted in fixed size length
 }
 
 // vim:sts=4:ts=8:

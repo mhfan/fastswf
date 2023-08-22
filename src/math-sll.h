@@ -271,77 +271,21 @@ typedef double ull;
 #define CONST_SQRT2     M_SQRT2
 #define CONST_1_SQRT2   (1/M_SQRT2)
 
+static __inline__ double sll2dbl(sll x) { return (double)x; }
+static __inline__ sll slladd(sll x, sll y) { return x + y; }
+static __inline__ sll sllsub(sll x, sll y) { return x - y; }
+static __inline__ sll sllmul(sll x, sll y) { return x * y; }
+static __inline__ sll slldiv(sll x, sll y) { return x / y; }
+static __inline__ sll sllinv(sll x) { return 1 / x; }
 
-static __inline__ double sll2dbl(sll x)
-{
-        return (double)x;
-}
-
-static __inline__ sll slladd(sll x, sll y)
-{
-        return x + y;
-}
-
-static __inline__ sll sllsub(sll x, sll y)
-{
-        return x - y;
-}
-
-static __inline__ sll sllmul(sll x, sll y)
-{
-        return x * y;
-}
-
-static __inline__ sll slldiv(sll x, sll y)
-{
-        return x / y;
-}
-
-static __inline__ sll sllinv(sll x)
-{
-        return 1 / x;
-}
-
-
-static __inline__ float sll2float(sll s)
-{
-        return (float)s;
-}
-
-static __inline__ sll float2sll(float f)
-{
-        return (sll)f;
-}
-
-static __inline__ sll sllsin(sll x)
-{
-        return sin(x);
-}
-
-static __inline__ sll sllcos(sll x)
-{
-        return cos(x);
-}
-
-static __inline__ sll slltan(sll x)
-{
-        return tan(x);
-}
-
-static __inline__ sll sllsqrt(sll x)
-{
-        return sqrt(x);
-}
-
-static __inline__ sll dbl2sll(double dbl)
-{
-        return (float)dbl;
-}
-
-static __inline__ sll sllpow(sll x, sll y)
-{
-        return pow(x,y);
-}
+static __inline__ float sll2float(sll s) { return (float)s; }
+static __inline__ sll float2sll(float f) { return (sll)f; }
+static __inline__ sll sllsin(sll x) { return sin(x); }
+static __inline__ sll sllcos(sll x) { return cos(x); }
+static __inline__ sll slltan(sll x) { return tan(x); }
+static __inline__ sll sllsqrt(sll x) { return sqrt(x); }
+static __inline__ sll dbl2sll(double dbl) { return (float)dbl; }
+static __inline__ sll sllpow(sll x, sll y) { return pow(x,y); }
 
 #else
 
@@ -404,15 +348,9 @@ typedef unsigned long long ull;
 #define CONST_SQRT2     0x000000016a09e667LL
 #define CONST_1_SQRT2   0x00000000b504f333LL
 
-static __inline__ sll slladd(sll x, sll y)
-{
-        return (x + y);
-}
+static __inline__ sll slladd(sll x, sll y) { return (x + y); }
 
-static __inline__ sll sllsub(sll x, sll y)
-{
-        return (x - y);
-}
+static __inline__ sll sllsub(sll x, sll y) { return (x - y); }
 
 /*
  * Let a = A * 2^32 + a_hi * 2^0 + a_lo * 2^(-32)
@@ -456,8 +394,7 @@ static __inline__ sll sllsub(sll x, sll y)
  *   a < 0 && b < 0: A = -1, B = -1 and the third term is a_h * b_h - a_l - b_l
  */
 #if defined(__arm__)
-static __inline__ sll sllmul(sll left, sll right)
-{
+static __inline__ sll sllmul(sll left, sll right) {
         /*
          * From gcc/config/arm/arm.h:
          *   In a pair of registers containing a DI or DF value the 'Q'
@@ -486,8 +423,7 @@ static __inline__ sll sllmul(sll left, sll right)
         return retval;
 }
 #elif defined(__i386__)
-static __inline__ sll sllmul(sll left, sll right)
-{
+static __inline__ sll sllmul(sll left, sll right) {
         register sll retval;
         __asm__(
                 "# sllmul\n\t"
@@ -536,8 +472,7 @@ static __inline__ sll sllmul(sll left, sll right)
 #else
 /* Plain C version: not optimal but portable. */
 #warning Fixed Point no optimal
-static __inline__ sll sllmul(sll a, sll b)
-{
+static __inline__ sll sllmul(sll a, sll b) {
         unsigned int a_lo, b_lo;
         signed int a_hi, b_hi;
         sll x;
@@ -556,8 +491,7 @@ static __inline__ sll sllmul(sll a, sll b)
 }
 #endif
 
-static __inline__ sll sllinv(sll v)
-{
+static __inline__ sll sllinv(sll v) {
         int sgn = 0;
         sll u;
         ull s = -1;
@@ -583,23 +517,15 @@ static __inline__ sll sllinv(sll v)
         return ((sgn) ? sllneg(u): u);
 }
 
-static __inline__ sll slldiv(sll left, sll right)
-{
+static __inline__ sll slldiv(sll left, sll right) {
         return sllmul(left, sllinv(right));
 }
 
-static __inline__ sll sllmul2(sll x)
-{
-        return x << 1;
-}
+static __inline__ sll sllmul2(sll x) { return x << 1; }
 
-static __inline__ sll sllmul4(sll x)
-{
-        return x << 2;
-}
+static __inline__ sll sllmul4(sll x) { return x << 2; }
 
-static __inline__ sll sllmul2n(sll x, int n)
-{
+static __inline__ sll sllmul2n(sll x, int n) {
         sll y;
 
 #if defined(__arm__)
@@ -623,18 +549,11 @@ static __inline__ sll sllmul2n(sll x, int n)
         return y;
 }
 
-static __inline__ sll slldiv2(sll x)
-{
-        return x >> 1;
-}
+static __inline__ sll slldiv2(sll x) { return x >> 1; }
 
-static __inline__ sll slldiv4(sll x)
-{
-        return x >> 2;
-}
+static __inline__ sll slldiv4(sll x) { return x >> 2; }
 
-static __inline__ sll slldiv2n(sll x, int n)
-{
+static __inline__ sll slldiv2n(sll x, int n) {
         sll y;
 
 #if defined(__arm__)
@@ -662,8 +581,7 @@ static __inline__ sll slldiv2n(sll x, int n)
  * Unpack the IEEE floating point double format and put it in fixed point
  * sll format.
  */
-static __inline__ sll dbl2sll(double dbl)
-{
+static __inline__ sll dbl2sll(double dbl) {
         union {
                 double d;
                 unsigned u[2];
@@ -706,13 +624,9 @@ static __inline__ sll dbl2sll(double dbl)
         return retval.sl_;
 }
 
-static __inline__ sll float2sll(float f)
-{
-        return dbl2sll((double)f);
-}
+static __inline__ sll float2sll(float f) { return dbl2sll((double)f); }
 
-static __inline__ double sll2dbl(sll s)
-{
+static __inline__ double sll2dbl(sll s) {
         union {
                 double d;
                 unsigned u[2];
@@ -757,10 +671,7 @@ static __inline__ double sll2dbl(sll s)
         return retval.d;
 }
 
-static __inline__ float sll2float(sll s)
-{
-        return ((float)sll2dbl(s));
-}
+static __inline__ float sll2float(sll s) { return ((float)sll2dbl(s)); }
 
 /*
  * Calculate cos x where -pi/4 <= x <= pi/4
@@ -769,8 +680,7 @@ static __inline__ float sll2float(sll s)
  *      cos x = 1 - x^2 / 2! + x^4 / 4! - ... + x^(2N) / (2N)!
  *      Note that (pi/4)^12 / 12! < 2^-32 which is the smallest possible number.
  */
-static __inline__ sll _sllcos(sll x)
-{
+static __inline__ sll _sllcos(sll x) {
         sll retval, x2;
         x2 = sllmul(x, x);
         /*
@@ -808,8 +718,7 @@ static __inline__ sll _sllcos(sll x)
  *      sin x = x - x^3 / 3! + x^5 / 5! - ... + x^(2N+1) / (2N+1)!
  *      Note that (pi/4)^13 / 13! < 2^-32 which is the smallest possible number.
  */
-static __inline__ sll _sllsin(sll x)
-{
+static __inline__ sll _sllsin(sll x) {
         sll retval, x2;
         x2 = sllmul(x, x);
         /*
@@ -840,8 +749,7 @@ static __inline__ sll _sllsin(sll x)
         return retval;
 }
 
-static __inline__ sll sllcos(sll x)
-{
+static __inline__ sll sllcos(sll x) {
         int i;
         sll retval;
 
@@ -867,8 +775,7 @@ static __inline__ sll sllcos(sll x)
         return retval;
 }
 
-static __inline__ sll sllsin(sll x)
-{
+static __inline__ sll sllsin(sll x) {
         int i;
         sll retval;
 
@@ -894,8 +801,7 @@ static __inline__ sll sllsin(sll x)
         return retval;
 }
 
-static __inline__ sll slltan(sll x)
-{
+static __inline__ sll slltan(sll x) {
         int i;
         sll retval;
         i = sll2int(_slladd(sllmul(x, CONST_2_PI), CONST_1_2));
@@ -938,8 +844,7 @@ static __inline__ sll slltan(sll x)
  *      arctan x = a + arctan ((tan x - t) / (1 + x * t))
  * And the typical worst case is x = 1.0 which converges in 3 iterations.
  */
-static __inline__ sll _sllatan(sll x)
-{
+static __inline__ sll _sllatan(sll x) {
         sll a, t, retval;
 
         /* First iteration */
@@ -959,8 +864,7 @@ static __inline__ sll _sllatan(sll x)
         return _slladd(retval, a);
 }
 
-static __inline__ sll sllatan(sll x)
-{
+static __inline__ sll sllatan(sll x) {
         sll retval;
 
         if (x < -sllneg(CONST_1))
@@ -972,8 +876,7 @@ static __inline__ sll sllatan(sll x)
         return _sllsub(retval, _sllatan(sllinv(x)));
 }
 
-static __inline__ sll sllatan2(sll y, sll x)
-{
+static __inline__ sll sllatan2(sll y, sll x) {
     sll a = sllatan(slldiv(y, x)) + (x < 0) * (y < 0 ? -1 : 1) * CONST_PI;
 }
 
@@ -984,8 +887,7 @@ static __inline__ sll sllatan2(sll y, sll x)
  *      e^x = x^0 / 0! + x^1 / 1! + ... + x^N / N!
  *      Note that 0.5^11 / 11! < 2^-32 which is the smallest possible number.
  */
-static __inline__ sll _sllexp(sll x)
-{
+static __inline__ sll _sllexp(sll x) {
         sll retval;
         retval = _slladd(CONST_1, sllmul(0, sllmul(x, CONST_1_11)));
         retval = _slladd(CONST_1, sllmul(retval, sllmul(x, CONST_1_11)));
@@ -1004,8 +906,7 @@ static __inline__ sll _sllexp(sll x)
 /*
  * Calculate e^x where x is arbitrary
  */
-static __inline__ sll sllexp(sll x)
-{
+static __inline__ sll sllexp(sll x) {
         int i;
         sll e, retval;
 
@@ -1033,8 +934,7 @@ static __inline__ sll sllexp(sll x)
 /*
  * Calculate natural logarithm using Netwton-Raphson method
  */
-static __inline__ sll slllog(sll x)
-{
+static __inline__ sll slllog(sll x) {
         sll x1, ln = 0;
 
         /* Scale: e^(-1/2) <= x <= e^(1/2) */
@@ -1069,8 +969,7 @@ static __inline__ sll slllog(sll x)
  * e^(ln x^y) = e^(y * log x)
  * x^y = e^(y * ln x)
  */
-static __inline__ sll sllpow(sll x, sll y)
-{
+static __inline__ sll sllpow(sll x, sll y) {
         if (y == CONST_0)
                 return CONST_1;
         return sllexp(sllmul(y, slllog(x)));
@@ -1111,8 +1010,7 @@ static __inline__ sll sllpow(sll x, sll y)
  * A good choice is 1 which lies in the middle, and takes 4 iterations to
  * converge from either extreme.
  */
-static __inline__ sll sllsqrt(sll x)
-{
+static __inline__ sll sllsqrt(sll x) {
         sll n, xn;
 
         /* Start with a scaling factor of 1 */
@@ -1156,8 +1054,7 @@ static __inline__ sll sllsqrt(sll x)
         root = (root >> 1) | (0x40000000l >> shift);    \
     } else root >>= 1;
 
-long isqrt(long value)
-{
+long isqrt(long value) {
     long root = 0;
 
     isqrt_step( 0);     isqrt_step( 2);     isqrt_step( 4);     isqrt_step( 6);

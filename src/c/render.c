@@ -24,8 +24,7 @@ static struct render_cairo {
     cairo_t* cr;
 }   render_cairo;
 
-static int render_cairo_init(struct swf_render* render, struct swf_rect* rect)
-{
+static int render_cairo_init(struct swf_render* render, struct swf_rect* rect) {
     int w, h;
     cairo_format_t fmt;
     struct Framebuffer* fb;
@@ -60,8 +59,7 @@ static int render_cairo_init(struct swf_render* render, struct swf_rect* rect)
     render->priv = &render_cairo;       return 0;
 }
 
-static void render_cairo_setbgc(struct swf_rgb* rgb)
-{
+static void render_cairo_setbgc(struct swf_rgb* rgb) {
     cairo_t* cr = render_cairo.cr;
     struct Framebuffer* fb = render_cairo.fb;
     assert(rgb && cr && fb);
@@ -70,16 +68,14 @@ static void render_cairo_setbgc(struct swf_rgb* rgb)
     cairo_fill(cr);
 }
 
-static void render_cairo_unin(struct swf_render* render)
-{
+static void render_cairo_unin(struct swf_render* render) {
     cairo_surface_destroy(render_cairo.sf);
     cairo_destroy(render_cairo.cr);
     fbunin(render_cairo.fb);
     free(render_cairo.fb);
 }
 
-void swf_render_init(struct swf_render* render)
-{
+void swf_render_init(struct swf_render* render) {
     assert(render);
     render->init    = render_cairo_init;
     render->setbgc  = render_cairo_setbgc;

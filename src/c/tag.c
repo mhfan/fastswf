@@ -23,16 +23,14 @@
 #define SWF_TAGPSR(tag) \
         static void swf_tagpsr_ ## tag (struct swf* swf)
 
-SWF_TAGPSR(Default)
-{
+SWF_TAGPSR(Default) {
     fprintf(stdout, "Ignore tag 0x%03x(%3d), skip %6d bytes: %s\n"
             , swf->th.code, swf->th.code, swf->th.size
             , swf->tagpsr[swf->th.code].name);
     while (swf->th.size--) bs_read_u8(swf->bs);
 }
 
-SWF_TAGPSR(ScriptLimits)
-{
+SWF_TAGPSR(ScriptLimits) {
     uint16_t recursion, timeout;
     assert(swf->th.code == SWF_TAG_ScriptLimits);
     recursion = bs_read_u16(swf->bs);
@@ -41,8 +39,7 @@ SWF_TAGPSR(ScriptLimits)
             , recursion, timeout);
 }
 
-SWF_TAGPSR(SetBackgroundColor)
-{
+SWF_TAGPSR(SetBackgroundColor) {
     assert(swf->th.code == SWF_TAG_SetBackgroundColor);
 
     swf_read_rgb(swf->bs, &swf->bgc);
@@ -55,8 +52,7 @@ SWF_TAGPSR(SetBackgroundColor)
 }
 
 void swf_read_shapefillstyle(struct bstream* bs, struct swf_fill_style* style,
-        uint16_t tag_type)
-{
+        uint16_t tag_type) {
     style->type = bs_read_u8(bs);
     switch (style->type) {
     case SWF_FILL_STYLE_SOLID:
@@ -85,8 +81,7 @@ void swf_read_shapefillstyle(struct bstream* bs, struct swf_fill_style* style,
 }
 
 void swf_read_shapewithstyle(struct bstream* bs,
-        struct swf_shape_with_style* shape, uint16_t tag_type)
-{
+        struct swf_shape_with_style* shape, uint16_t tag_type) {
     int i;
     shape->styles.fill.coun_ = bs_read_u8(bs);
     if (shape->styles.fill.coun_ == 0xff)
@@ -99,8 +94,7 @@ dtrace;
 //    swf_read_shaperecords(bs, shape->records);
 }
 
-SWF_TAGPSR(DefineShape)
-{
+SWF_TAGPSR(DefineShape) {
     struct swf_defineshape d;
     d.id = bs_read_u16(swf->bs);
     swf_read_rect(swf->bs, &d.br);
@@ -109,22 +103,19 @@ dtrace;
     } else swf_read_shapewithstyle(swf->bs, &d.shape, swf->th.code);
 }
 
-void swf_read_taghdr(struct bstream* bs, struct swf_tag_hdr* th)
-{
+void swf_read_taghdr(struct bstream* bs, struct swf_tag_hdr* th) {
     assert(bs && th);
     th->_ = bs_read_u16(bs);
     th->size = (th->siz_ == 0x3f) ? bs_read_u32(bs) : th->siz_;
 }
 
 void swf_set_tagpsr(struct swf_tagpsr* tagpsr, uint8_t code,
-        void (*prsr)(struct swf* swf))
-{
+        void (*prsr)(struct swf* swf)) {
     assert(tagpsr && prsr);
     tagpsr[code].prsr = prsr;
 }
 
-void swf_tagpsr_init(struct swf_tagpsr* tagpsr)
-{
+void swf_tagpsr_init(struct swf_tagpsr* tagpsr) {
 #define  SWF_TAGPSR_ENTRY(tag) \
         tagpsr[SWF_TAG_ ## tag].prsr = swf_tagpsr_ ## tag; \
         tagpsr[SWF_TAG_ ## tag].name = #tag;

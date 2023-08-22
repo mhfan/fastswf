@@ -75,9 +75,8 @@ static struct argp_option argp_opts[] = {
     { NULL, 0, NULL, 0, NULL, 0 }
 };
 
-static error_t parse_opts(int key, char* arg, struct argp_state* state)
-{   // Parse a single option.
-    switch (key) {
+static error_t parse_opts(int key, char* arg, struct argp_state* state) {
+    switch (key) {      // Parse a single option.
     case ARGP_KEY_INIT:
         opts.nfile = 0;
         opts.files = NULL;
@@ -113,9 +112,8 @@ static error_t parse_opts(int key, char* arg, struct argp_state* state)
     }                                   return 0;
 }
 
-static void show_version(FILE* stream, struct argp_state* state)
-{   // Show the version number and copyright information.
-    (void)state;                        // XXX:
+static void show_version(FILE* stream, struct argp_state* state) {
+    (void)state; // XXX: Show the version number and copyright information.
     // Print in small parts whose localizations can hopefully
     // be copied from other programs.
     fputs(PACKAGE_NAME " " VERSION_STRING "/yyyy.mm.dd ("
@@ -142,8 +140,7 @@ static struct argp argp = {
 };
 #endif
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     SWF::Flash swf;
     textdomain(PACKAGE_NAME);
     argp_parse(&argp, argc, argv, 0, NULL, NULL);

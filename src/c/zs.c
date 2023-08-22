@@ -18,8 +18,7 @@
 int zs_eof(struct zstream* zs) { return (zs->flag & ZS_EOF); }
 
 #if 0
-void zerr(struct zstream* zs, int ret)
-{   // report a zlib or i/o error
+void zerr(struct zstream* zs, int ret) {    // report a zlib or i/o error
     fprintf(stderr, "ZS: ");
     switch (ret) {
     case Z_ERRNO:                       assert(zs);
@@ -38,8 +37,7 @@ void zerr(struct zstream* zs, int ret)
 }
 #endif
 
-struct zstream* zs_init(FILE* fs, unsigned md)
-{
+struct zstream* zs_init(FILE* fs, unsigned md) {
     int ret;
     z_stream* zstr;
     struct zstream* zs=NULL;
@@ -61,14 +59,12 @@ struct zstream* zs_init(FILE* fs, unsigned md)
     return zs;
 }
 
-int zs_close(struct zstream* zs)
-{
+int zs_close(struct zstream* zs) {
     free(zs->zstr);                     free(zs->chnk);
     free(zs);                           return 0;
 }
 
-size_t zs_read(void* buf, size_t size, size_t memb, struct zstream* zs)
-{
+size_t zs_read(void* buf, size_t size, size_t memb, struct zstream* zs) {
     assert(buf && zs && zs->zstr && 0 < size && 0 < memb);
     zs->zstr-> next_out = buf;
     zs->zstr->avail_out = size * memb;
@@ -87,67 +83,56 @@ size_t zs_read(void* buf, size_t size, size_t memb, struct zstream* zs)
 #if 0
 // TODO: implement all the rest standard stream manipulate operation
 
-struct zstream* zs_open(char* fn, char* m)
-{
+struct zstream* zs_open(char* fn, char* m) {
 dtrace;
     return NULL;
 }
 
-size_t zs_write(void* buf, size_t size, size_t memb, struct zstream* zs)
-{
+size_t zs_write(void* buf, size_t size, size_t memb, struct zstream* zs) {
 dtrace;
     return 0;
 }
 
-int zs_seeko(struct zstream* zs, off_t off, int wh)
-{
+int zs_seeko(struct zstream* zs, off_t off, int wh) {
 dtrace;
     return 0;
 }
 
-int zs_seek(struct zstream* zs, long off, int wh)
-{
+int zs_seek(struct zstream* zs, long off, int wh) {
 dtrace;
     return 0;
 }
 
-int zs_getpos(struct zstream* zs, fpos_t *pos)
-{
+int zs_getpos(struct zstream* zs, fpos_t *pos) {
 dtrace;
     return 0;
 }
 
-int zs_setpos(struct zstream* zs, fpos_t *pos)
-{
+int zs_setpos(struct zstream* zs, fpos_t *pos) {
 dtrace;
     return 0;
 }
 
-void zs_rewind(struct zstream* zs)
-{
+void zs_rewind(struct zstream* zs) {
 dtrace;
 }
 
-off_t zs_tello(struct zstream* zs)
-{
+off_t zs_tello(struct zstream* zs) {
 dtrace;
     return 0;
 }
 
-long zs_tell(struct zstream* zs)
-{
+long zs_tell(struct zstream* zs) {
 dtrace;
     return 0;
 }
 
-int zs_error(struct zstream* zs)
-{
+int zs_error(struct zstream* zs) {
 dtrace;
     return 0;
 }
 
-void zs_clearerr(struct zstream* zs)
-{
+void zs_clearerr(struct zstream* zs) {
 dtrace;
 }
 #endif

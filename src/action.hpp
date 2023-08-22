@@ -1183,7 +1183,7 @@ struct ActionNameTable: public std::map<uint16_t, const char*> {
 
 
 namespace DATATYPE {
-    enum DataType {
+enum DataType {
     // The following is all types accepted in the PushData action: v5
     String                      = 0x00,
     // Push a string (literal) on the stack.
@@ -1454,11 +1454,9 @@ struct Action {
     }
 };
 
-struct StackMachine {
-};
+struct StackMachine { };
 
-struct ActionScript {
-};
+struct ActionScript { };
 
 };
 

@@ -160,8 +160,7 @@ private:
 #if 1//def      ZIP_WRAP
 #include <zlib.h>
 
-inline int inflate_wrapper(char* src, uint32_t len, void* dst, uint32_t siz)
-{
+inline int inflate_wrapper(char* src, uint32_t len, void* dst, uint32_t siz) {
     int ret;    z_stream zs;            zs.opaque = (voidpf)0;
     zs.zalloc = (alloc_func)0;          zs.zfree  =  (free_func)0;
 
@@ -179,8 +178,7 @@ inline int inflate_wrapper(char* src, uint32_t len, void* dst, uint32_t siz)
     return Z_OK;
 }
 
-inline int inflate_wrapper(BitStream& bs, void* buf, uint32_t size)
-{
+inline int inflate_wrapper(BitStream& bs, void* buf, uint32_t size) {
     int ret;    char byte[1];           z_stream zs;
 
     zs.opaque = (voidpf)0;

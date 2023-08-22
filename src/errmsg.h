@@ -222,8 +222,7 @@ using std::errno;
 #include <new>
 
 #if 0
-void err_new_handl()
-{
+void err_new_handl() {
     fprintf(stderr, "[0;1;35mError[34m at \"[4;37m%s[0;1;34m\":"
                     "[36m%d[34m: [31mNo enough memory![0;37m\n",
             __FILE__, __LINE__);

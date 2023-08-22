@@ -16,8 +16,7 @@
 #include "type.h"
 #include "common.h"
 
-void swf_read_rect(struct bstream* bs, struct swf_rect* rect)
-{
+void swf_read_rect(struct bstream* bs, struct swf_rect* rect) {
     unsigned nbit;
     assert(bs && rect);
     bs_align_byte(bs);
@@ -28,8 +27,7 @@ void swf_read_rect(struct bstream* bs, struct swf_rect* rect)
     rect->y1 = bs_read_snb(bs, nbit);
 }
 
-void swf_read_matrix(struct bstream* bs, struct swf_matrix* mat)
-{
+void swf_read_matrix(struct bstream* bs, struct swf_matrix* mat) {
     unsigned has, nbit;
     assert(bs && mat);
     bs_align_byte(bs);
@@ -48,23 +46,20 @@ void swf_read_matrix(struct bstream* bs, struct swf_matrix* mat)
     mat->ty = bs_read_snb(bs, nbit);
 }
 
-void swf_read_rgba(struct bstream* bs, struct swf_rgba* rgba)
-{
+void swf_read_rgba(struct bstream* bs, struct swf_rgba* rgba) {
     rgba->r = bs_read_u8(bs);
     rgba->g = bs_read_u8(bs);
     rgba->b = bs_read_u8(bs);
     rgba->a = bs_read_u8(bs);
 }
 
-void swf_read_rgb(struct bstream* bs, struct swf_rgb* rgb)
-{
+void swf_read_rgb(struct bstream* bs, struct swf_rgb* rgb) {
     rgb->r = bs_read_u8(bs);
     rgb->g = bs_read_u8(bs);
     rgb->b = bs_read_u8(bs);
 }
 
-void swf_read_cxform(struct bstream* bs, struct swf_cxform* cxf)
-{
+void swf_read_cxform(struct bstream* bs, struct swf_cxform* cxf) {
     uint8_t nbit;
     assert(bs && cxf);
     bs_align_byte(bs);

@@ -422,8 +422,7 @@ Flash::Flash() {
 }
 #endif//RENDER_TWIN
 
-bool Flash::open(const char* fn)
-{
+bool Flash::open(const char* fn) {
     enum { EMBEDDED_SWF_ALIGNMENT = 0x1000u, }; // XXX:
 
     std::ios::sync_with_stdio(false);           // XXX:
@@ -464,8 +463,7 @@ bool Flash::open(const char* fn)
     rl = fn;                            return true;
 }
 
-void Flash::load(uint8_t ht)
-{
+void Flash::load(uint8_t ht) {
   do {
 
     Tag t(bs), *pt;
@@ -602,8 +600,7 @@ void Flash::load(uint8_t ht)
   } while (ht);
 }
 
-void Flash::play(uint8_t flag, int8_t sp)
-{
+void Flash::play(uint8_t flag, int8_t sp) {
     uint32_t ct = 0, ft = 1000000u * 256u / mh.fr;
 
     if (sp < 0) ft /= -sp; else ft *= sp;

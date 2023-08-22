@@ -920,15 +920,9 @@ struct FillStyleBitmapMorph: public FillStyle {
     }
 };
 
-inline BitStream& operator>>(BitStream& bs, FillStyle& fs)
-{
-    return bs;
-}
+inline BitStream& operator>>(BitStream& bs, FillStyle& fs) { return bs; }
 
-inline std::ostream& operator<<(std::ostream& os, FillStyle& fs)
-{
-    return os;
-}
+inline std::ostream& operator<<(std::ostream& os, FillStyle& fs) { return os; }
 
 struct LineStyle2 {
     RGBA Color;

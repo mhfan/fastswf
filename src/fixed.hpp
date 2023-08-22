@@ -226,8 +226,7 @@ static const uint16_t sin16_table[0x01 << LOG2_SIN] = {
 #define LOG2_SIN    10u
 #define LOG2_FIXED  16u
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
     uint16_t i;
 
     for (i = 0; i < (0x01 << LOG2_SIN); ++i) {
@@ -376,8 +375,7 @@ EOF
 inline int16_t degree2angle(int32_t d) { return d * ANGLE_360 / 360; }
 
 template <typename T, uint8_t p, bool cos>
-inline T fixed_sincos(T a)
-{
+inline T fixed_sincos(T a) {
     while (a < 0) a += FIXED_2PI;
     a = fixed_mul<T, p>(a, FIXED_R2PI) >> (p - 2 - LOG2_SIN);
     if (cos) a += ANGLE_90;

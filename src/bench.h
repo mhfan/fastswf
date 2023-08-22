@@ -11,7 +11,7 @@
  *              Univ. of Sci.& Tech. of China (USTC)           *
  *              People's Republic of China (PRC)               *
  *                                                             *
- * Copyright (c) 2006 M.H.Fan, All rights reserved.             *
+ * Copyright (c) 2006 M.H.Fan, All rights reserved.            *
  *                                                             *
  * This file is free software;                                 *
  *   you are free to modify and/or redistribute it             *
@@ -45,8 +45,7 @@
  * 函数调用。
  */
 
-inline uint64_t rdtsc ()
-{
+inline uint64_t rdtsc() {
     uint64_t dst;
 #ifdef  __aarch64__
     asm volatile("mrs %0, cntvct_el0" : "=r" (dst));
@@ -59,13 +58,11 @@ inline uint64_t rdtsc ()
     return dst;
 }
 
-float get_cpu_freq ()
-{
+float get_cpu_freq() {
     uint64_t freq = rdtsc(); sleep(1); return freq = rdtsc() - freq;
 }
 
-float getCpuFreq()
-{
+float getCpuFreq() {
     size_t n=64;
     char* lineptr = (char*) malloc (n);
     FILE* fp = fopen ("/proc/cpuinfo", "r");
@@ -77,16 +74,14 @@ float getCpuFreq()
 
 float cpu_freq = 0.0F;
 
-double cyc2sec (uint64_t cyc)
-{
+double cyc2sec(uint64_t cyc) {
     if (cpu_freq < EPSILON) cpu_freq = get_cpu_freq ();
     //int64_t call_interval = rdtsc() - rdtsc();
     return (cyc/* - call_interval*/) / (double)cpu_freq;
 }
 
 #ifdef  DEBUG
-void print (void)
-{
+void print(void) {
     fprintf (stdout, "CPU clock cycle count: %Ld\n", rdtsc ());
     return;
 }

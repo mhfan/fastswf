@@ -17,8 +17,7 @@
 #include "utils.h"
 #include "common.h"
 
-int swf_decode_frame(struct swf* swf)
-{
+int swf_decode_frame(struct swf* swf) {
     assert(swf && swf->bs);
     do {swf_read_taghdr(swf->bs, &swf->th);
         swf->tagpsr[swf->th.code].prsr(swf);
@@ -27,8 +26,7 @@ int swf_decode_frame(struct swf* swf)
     return 0;
 }
 
-struct swf* swf_open(char* path)
-{
+struct swf* swf_open(char* path) {
     FILE* fs;
     struct swf* swf;
     union {
@@ -74,8 +72,7 @@ struct swf* swf_open(char* path)
     return swf;
 }
 
-int swf_close(struct swf* swf)
-{
+int swf_close(struct swf* swf) {
     assert(swf && swf->bs);             bs_close(swf->bs);
     free(swf);                          return 0;
 }
