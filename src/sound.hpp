@@ -153,7 +153,7 @@ struct AudioADPCM: public Audio {
     int16_t* optr = obuf + olen;
 
     if (st < 2u) for (nb += 2; !eod(); ) {
-        if (((olen += 2) & (0xff << 1)) == 1u) {
+        if (((olen += 2) & (0xfff << 1)) == 2u) {
             // wrap around at every 4096 samples...
             valp[0] = get_bits(16u, SIGNED);
             sidx[0] = get_bits( 6u, UNSIGN);
@@ -174,7 +174,7 @@ struct AudioADPCM: public Audio {
              //if (SHRT_MAX < valp[0]) valp[0] = SHRT_MAX;      // XXX:
         }   *optr++ = valp[0], *optr++ = valp[0];
     } else for (nb += 2; !eod(); ) {
-        if (((olen += 2) & (0xff << 1)) == 1u) {
+        if (((olen += 2) & (0xfff << 1)) == 2u) {
             // wrap around at every 4096 samples...
             for (uint8_t i=0u; i < st; ++i) {
                 *optr++ = valp[i] = get_bits(16u, SIGNED);
