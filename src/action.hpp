@@ -1364,14 +1364,14 @@ struct StringObject {
 };
 
 struct MathObject {     // v5
-    static const ull e       = CONST_E;
-    static const ull pi      = CONST_PI;
-    static const ull ln2     = CONST_LN2;
-    static const ull ln10    = CONST_LN10;
-    static const ull sqrt2   = CONST_SQRT2;
-    static const ull log2e   = CONST_LOG2_E;
-    static const ull log10e  = CONST_LOG10_E;
-    static const ull sqrt1_2 = CONST_1_SQRT2;
+    static constexpr ull e       = CONST_E;
+    static constexpr ull pi      = CONST_PI;
+    static constexpr ull ln2     = CONST_LN2;
+    static constexpr ull ln10    = CONST_LN10;
+    static constexpr ull sqrt2   = CONST_SQRT2;
+    static constexpr ull log2e   = CONST_LOG2_E;
+    static constexpr ull log10e  = CONST_LOG10_E;
+    static constexpr ull sqrt1_2 = CONST_1_SQRT2;
 
     static ull abs(sll v) { return sll_abs(v); }
     static sll ceil (sll v) { sll i = sllint(v); return (i + (i < v)); }
