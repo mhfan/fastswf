@@ -929,7 +929,7 @@ enum ActionCode {
 
     Push                = 0x96,
     PushData            = 0x96,
-    /* variable         
+    /* variable
      *              struct {
      *                  unsigned char   f_type;
      *                  ...             f_data;
@@ -995,7 +995,7 @@ enum ActionCode {
     // terminate with a Return action. The value used by the return statement
     // should be the only value left on the caller stack.
     // Do not terminate a function with an End action
-    /* variable         
+    /* variable
      *          string          f_name;
      *          unsigned short  f_arg_count;
      *          string          f_arg_name[f_arg_count];

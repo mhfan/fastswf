@@ -685,7 +685,7 @@ struct CXForm {
             ab = bs.read(nbit, SIGNED);
             if (aa == CHAR_MAX) aa = bs.read(nbit, UNSIGN);
         }   else ar = ag = ab = aa = DEFAULT_ADD;
-        
+
 #ifdef  NORMALIZED_COLOR
         __f[3] = __[3] / 255.f, __f[2] = _[2] / 255.f,
         __f[1] = __[1] / 255.f, __f[0] = _[0] / 255.f;
@@ -780,7 +780,7 @@ struct GradientRecord {
 
     BitStream& load(BitStream& bs) {    bs >> pos;
 #ifdef  NORMALIZED_COLOR//CTM_FLOAT_POINT
-        fpos = pos / 255.f;     
+        fpos = pos / 255.f;
 #endif
         return (rgba.a ? (bs >> rgba.r >> rgba.g >> rgba.b) : (bs >> rgba));
     }

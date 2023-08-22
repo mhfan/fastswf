@@ -139,7 +139,7 @@ uint32_t bs_read_unb(struct bstream* bs, unsigned nb)
 
  int32_t bs_read_snb(struct bstream* bs, unsigned nb)
 {
-    int32_t val = bs_read_unb(bs, nb);  
+    int32_t val = bs_read_unb(bs, nb);
     return SIGN_EXTEND(val, nb);
 }
 

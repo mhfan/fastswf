@@ -212,7 +212,7 @@ extern "C" {
 #ifndef USE_FIXED_POINT
 
 #include <math.h>
-        
+
 typedef double sll;
 typedef double ull;
 

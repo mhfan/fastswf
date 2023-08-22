@@ -279,7 +279,7 @@ struct FrameRenderCairo: public FrameRender {
             }
         }
 #endif
-                
+
                 if (psr) {
                     if (psr->lns < (uint16_t)-1)
                         StrokePath(sws->lsVec[psr->lns]);

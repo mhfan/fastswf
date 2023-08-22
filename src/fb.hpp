@@ -88,7 +88,7 @@ struct FrameBuffer {
                 (flag & ~FLIP_WX) : (flag | FLIP_WX);
         if (h < 0) h = -h, flag =      (flag & FLIP_HY) ?
                 (flag & ~FLIP_HY) : (flag | FLIP_HY);
-        
+
         //x = (xres + x) % xres;        y = (yres + y) % yres;
         if (x < 0) x = xres + x;        if (y < 0) y = yres + y;
 
