@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 #ifndef DISPLIST_H
@@ -96,7 +96,7 @@
  *
  */
 
-#define	swf_character			swf_definition
+#define swf_character                   swf_definition
 struct swf_definition {
 };
 
@@ -104,7 +104,7 @@ struct swf_dictionary {
     struct swf_definition* next;
 };
 
-#define	swf_dispitem			swf_displist
+#define swf_dispitem                    swf_displist
 struct swf_displist {
     struct swf_definition* next;
 };

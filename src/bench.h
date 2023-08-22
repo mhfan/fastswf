@@ -8,14 +8,14 @@
  * Maintainer:  M.H. Fan  <mhfan@ustc.edu>                     *
  *              Laboratory of Structural Biology               *
  *              School of Life Science                         *
- *              Univ. of Sci.& Tech. of China (USTC)	       *
+ *              Univ. of Sci.& Tech. of China (USTC)           *
  *              People's Republic of China (PRC)               *
  *                                                             *
  * CopyRight (c)  2003  MeiHui FAN                             *
  *   All rights reserved.                                      *
  *                                                             *
  * This file is free software;                                 *
- *   you are free to modify and/or redistribute it  	       *
+ *   you are free to modify and/or redistribute it             *
  *   under the terms of the GNU General Public Licence (GPL).  *
  *                                                             *
  * No warranty, no liability; use this at your own risk!       *
@@ -28,11 +28,11 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#define	EPSILON			    0.000001F
+#define EPSILON                     0.000001F
 
 #ifndef uint64_t
-#define int64_t			    long long int
-#define uint64_t		    unsigned long long int
+#define int64_t                     long long int
+#define uint64_t                    unsigned long long int
 #endif
 
 /*
@@ -48,9 +48,9 @@
 inline uint64_t rdtsc ()
 {
     uint64_t dst;
-    asm volatile ("RDTSC\n" : "=A" (dst));	// compatible with ANSI C.
+    asm volatile ("RDTSC\n" : "=A" (dst));      // compatible with ANSI C.
     // asm volatile ("RDTSC");
-    // asm ("_emit 0x0F\r\t"	"_emit 0x31");	// for cpp
+    // asm ("_emit 0x0F\r\t"    "_emit 0x31");  // for cpp
     // asm ("_emit 0x0F; _emit 0x31");
     return dst;
 }
@@ -67,7 +67,7 @@ float getCpuFreq()
     FILE* fp = fopen ("/proc/cpuinfo", "r");
     do { getdelim (&lineptr, &n, '\n', fp);
     } while (0 != memcmp (lineptr, "cpu MHz", 7));
-    n = 0;	while (lineptr[++n] != ':') ;
+    n = 0;      while (lineptr[++n] != ':') ;
     fclose (fp);    return atof(lineptr+n+1);
 }
 
@@ -80,7 +80,7 @@ double cyc2sec (uint64_t cyc)
     return (cyc/* - call_interval*/) / (double)cpu_freq;
 }
 
-#ifdef	DEBUG
+#ifdef  DEBUG
 void print (void)
 {
     fprintf (stdout, "CPU clock cycle count: %Ld\n", rdtsc ());

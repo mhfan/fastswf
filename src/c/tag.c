@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 
@@ -19,17 +19,17 @@
 #include "type.h"
 #include "shape.h"
 #include "common.h"
-#include "render.h"			// XXX
-#include "swf.h"			// FIXME: don't export struct swf here
+#include "render.h"                     // XXX
+#include "swf.h"                        // FIXME: don't export struct swf here
 
-#define	SWF_TAGPSR(tag) \
-	static void swf_tagpsr_ ## tag (struct swf* swf)
+#define SWF_TAGPSR(tag) \
+        static void swf_tagpsr_ ## tag (struct swf* swf)
 
 SWF_TAGPSR(Default)
 {
     fprintf(stdout, "Ignore tag 0x%03x(%3d), skip %6d bytes: %s\n"
-	    , swf->th.code, swf->th.code, swf->th.size
-	    , swf->tagpsr[swf->th.code].name);
+            , swf->th.code, swf->th.code, swf->th.size
+            , swf->tagpsr[swf->th.code].name);
     while (swf->th.size--) bs_read_u8(swf->bs);
 }
 
@@ -40,7 +40,7 @@ SWF_TAGPSR(ScriptLimits)
     recursion = bs_read_u16(swf->bs);
     timeout   = bs_read_u16(swf->bs);
     fprintf(stdout, "ScriptLimits: recursion=%d, timeout=%d\n"
-	    , recursion, timeout);
+            , recursion, timeout);
 }
 
 SWF_TAGPSR(SetBackgroundColor)
@@ -52,51 +52,51 @@ SWF_TAGPSR(SetBackgroundColor)
     swf->frames = 0;
 
     fprintf(stdout, "#%d: %s to [%d %d %d]\n", swf->frames
-	    , swf->tagpsr[swf->th.code].name
-	    , swf->bgc.r, swf->bgc.g, swf->bgc.b);
+            , swf->tagpsr[swf->th.code].name
+            , swf->bgc.r, swf->bgc.g, swf->bgc.b);
 }
 
 void swf_read_shapefillstyle(struct bstream* bs, struct swf_fill_style* style,
-	uint16_t tag_type)
+        uint16_t tag_type)
 {
     style->type = bs_read_u8(bs);
     switch (style->type) {
     case SWF_FILL_STYLE_SOLID:
-	switch (tag_type) {
-	case SWF_TAG_DefineMorphShape:
-	    swf_read_rgba(bs, &style->solid.rgba);
-	    swf_read_rgba(bs, &style->solid.rgba_morph);
-	case SWF_TAG_DefineShape3:
-	    swf_read_rgba(bs, &style->solid.rgba);
-	default:
-	    swf_read_rgb (bs, &style->solid.rgb);
-	}   break;
+        switch (tag_type) {
+        case SWF_TAG_DefineMorphShape:
+            swf_read_rgba(bs, &style->solid.rgba);
+            swf_read_rgba(bs, &style->solid.rgba_morph);
+        case SWF_TAG_DefineShape3:
+            swf_read_rgba(bs, &style->solid.rgba);
+        default:
+            swf_read_rgb (bs, &style->solid.rgb);
+        }   break;
     case SWF_FILL_STYLE_GRADIENT_LINEAR:
     case SWF_FILL_STYLE_GRADIENT_RADIAL:
-	swf_read_matrix(bs, &style->gradient.matrix);
-	if (tag_type == SWF_TAG_DefineMorphShape)
-	    swf_read_matrix(bs, &style->gradient.matrix_morph);
-	break;
+        swf_read_matrix(bs, &style->gradient.matrix);
+        if (tag_type == SWF_TAG_DefineMorphShape)
+            swf_read_matrix(bs, &style->gradient.matrix_morph);
+        break;
     case SWF_FILL_STYLE_BITMAP_CLIPPED_S:
-	break;
+        break;
     case SWF_FILL_STYLE_BITMAP_TILLED_H:
-	break;
+        break;
     case SWF_FILL_STYLE_BITMAP_CLIPPED_H:
-	break;
+        break;
     }
 }
 
 void swf_read_shapewithstyle(struct bstream* bs,
-	struct swf_shape_with_style* shape, uint16_t tag_type)
+        struct swf_shape_with_style* shape, uint16_t tag_type)
 {
     int i;
     shape->styles.fill.coun_ = bs_read_u8(bs);
     if (shape->styles.fill.coun_ == 0xff)
-	shape->styles.fill.count = bs_read_u16(bs);
+        shape->styles.fill.count = bs_read_u16(bs);
     shape->styles.fill.styles = malloc(sizeof(*shape->styles.fill.styles)
-	    * shape->styles.fill.count);
+            * shape->styles.fill.count);
     for (i=0; i < shape->styles.fill.count; ++i)
-	swf_read_shapefillstyle(bs, &shape->styles.fill.styles[i], tag_type);
+        swf_read_shapefillstyle(bs, &shape->styles.fill.styles[i], tag_type);
 dtrace;
 //    swf_read_shaperecords(bs, shape->records);
 }
@@ -119,7 +119,7 @@ void swf_read_taghdr(struct bstream* bs, struct swf_tag_hdr* th)
 }
 
 void swf_set_tagpsr(struct swf_tagpsr* tagpsr, uint8_t code,
-	void (*prsr)(struct swf* swf))
+        void (*prsr)(struct swf* swf))
 {
     assert(tagpsr && prsr);
     tagpsr[code].prsr = prsr;
@@ -127,12 +127,12 @@ void swf_set_tagpsr(struct swf_tagpsr* tagpsr, uint8_t code,
 
 void swf_tagpsr_init(struct swf_tagpsr* tagpsr)
 {
-#define	 SWF_TAGPSR_ENTRY(tag) \
-	tagpsr[SWF_TAG_ ## tag].prsr = swf_tagpsr_ ## tag; \
-	tagpsr[SWF_TAG_ ## tag].name = #tag;
-#define	 SWF_TAGPSR_ENTRY2(tag, tag2) \
-	tagpsr[SWF_TAG_ ## tag].prsr = swf_tagpsr_ ## tag2; \
-	tagpsr[SWF_TAG_ ## tag].name = #tag;
+#define  SWF_TAGPSR_ENTRY(tag) \
+        tagpsr[SWF_TAG_ ## tag].prsr = swf_tagpsr_ ## tag; \
+        tagpsr[SWF_TAG_ ## tag].name = #tag;
+#define  SWF_TAGPSR_ENTRY2(tag, tag2) \
+        tagpsr[SWF_TAG_ ## tag].prsr = swf_tagpsr_ ## tag2; \
+        tagpsr[SWF_TAG_ ## tag].name = #tag;
     SWF_TAGPSR_ENTRY2(End, Default);
     SWF_TAGPSR_ENTRY2(ShowFrame, Default);
     SWF_TAGPSR_ENTRY2(DefineShape, Default);

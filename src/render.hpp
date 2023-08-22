@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 #ifndef RENDER_HPP
@@ -31,8 +31,8 @@ struct FrameRender {
     virtual void DrawShape(ShapeWithStyle* sws, PlaceObject* pl) = 0;
 };
 
-#define	DEFAULT_SCREEN_WIDTH		320
-#define	DEFAULT_SCREEN_HEIGHT		240
+#define DEFAULT_SCREEN_WIDTH            320
+#define DEFAULT_SCREEN_HEIGHT           240
 
 };
 

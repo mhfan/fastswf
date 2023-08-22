@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 #ifndef SWF_HPP
@@ -140,10 +140,10 @@ namespace SWF {
 
 struct FileHeader {
     union {
-	struct {
-	    uint32_t mgc:24, ver:8;	// XXX: regarding endianess
-	};  uint32_t __;	uint8_t _[4];	// { 'C', 'W', 'S', 8 }
-    };	    uint32_t len;
+        struct {
+            uint32_t mgc:24, ver:8;     // XXX: regarding endianess
+        };  uint32_t __;        uint8_t _[4];   // { 'C', 'W', 'S', 8 }
+    };      uint32_t len;
 
     /* The FileLength field is the total length of the SWF file, including the
      * header. If this is an uncompressed SWF file (FWS signature), the
@@ -154,20 +154,20 @@ struct FileHeader {
      * make the decompression process more efficient.
      */
 
-    enum {  MAX_SWF_VERSION		= 10u,
-	    MAGIC_SIGNATURE_SWC		= 'SWC',
-	    MAGIC_SIGNATURE_SWF		= 'SWF',
-	    MAGIC_SIGNATURE_COMPRESSED  = MAGIC_SIGNATURE_SWC,
-	    MAGIC_SIGNATURE		= MAGIC_SIGNATURE_SWF,
+    enum {  MAX_SWF_VERSION             = 10u,
+            MAGIC_SIGNATURE_SWC         = 'SWC',
+            MAGIC_SIGNATURE_SWF         = 'SWF',
+            MAGIC_SIGNATURE_COMPRESSED  = MAGIC_SIGNATURE_SWC,
+            MAGIC_SIGNATURE             = MAGIC_SIGNATURE_SWF,
     };
 
     std::fstream& load(std::fstream& fs) {
-	fs.read((char*)_, sizeof(_));
-	fs.read((char*)&len, sizeof(len));
-#if	__BYTE_ORDER == __BIG_ENDIAN
-	len = bswap_32(len);	// XXX: le2ne_32()
+        fs.read((char*)_, sizeof(_));
+        fs.read((char*)&len, sizeof(len));
+#if     __BYTE_ORDER == __BIG_ENDIAN
+        len = bswap_32(len);    // XXX: le2ne_32()
 #endif
-	return fs;
+        return fs;
     }
 };
 
@@ -175,8 +175,8 @@ struct MovieHeader {
     Rect fs;
 
     union {
-	uf16_8_t fr;
-	uint16_t f_;
+        uf16_8_t fr;
+        uint16_t f_;
     };  uint16_t fc;
 
     BitStream& load(BitStream& bs) { return bs >> fs >> f_ >> fc; }
@@ -184,13 +184,13 @@ struct MovieHeader {
     //void exec() { render.SetViewport(fs); }
 
     void dump(std::ostream& os) {
-	os  << "Movie:  " << fs << " twips; "	 << std::setw(5) << f_
-	    << "/256=" << f_ / 256.f << " fps; " << std::setw(6) << fc
-	    << " frames" << std::endl;
+        os  << "Movie:  " << fs << " twips; "    << std::setw(5) << f_
+            << "/256=" << f_ / 256.f << " fps; " << std::setw(6) << fc
+            << " frames" << std::endl;
     }
 
     friend BitStream& operator>>(BitStream& bs, MovieHeader& mh)
-	    { return mh.load(bs); }
+            { return mh.load(bs); }
 };
 
 /*
@@ -363,17 +363,17 @@ struct MovieHeader {
 
 struct TimeLine {
     uint32_t cu;
-    //uint32_t ct;	    // = fn * 1000000u * 256u / fr;
-    //uint32_t tl;	    // = fc * 1000000u * 256u / fr;
+    //uint32_t ct;          // = fn * 1000000u * 256u / fr;
+    //uint32_t tl;          // = fc * 1000000u * 256u / fr;
     struct timeval tb;
 
     uint32_t fresh() {
-	static struct timeval tn;	gettimeofday(&tn, NULL);
-	cu = (tn.tv_sec - tb.tv_sec) * 1000000u + tn.tv_usec - tb.tv_usec;
-	return cu;
+        static struct timeval tn;       gettimeofday(&tn, NULL);
+        cu = (tn.tv_sec - tb.tv_sec) * 1000000u + tn.tv_usec - tb.tv_usec;
+        return cu;
     }
 
-    void start() { gettimeofday(&tb, NULL);	cu = 0u; }
+    void start() { gettimeofday(&tb, NULL);     cu = 0u; }
 
     void delay(uint32_t ct) { fresh(); if (cu < ct) usleep(ct - cu); }
 };
@@ -383,48 +383,48 @@ struct EventHandler { };
 
 struct Flash {
     enum {  LOAD_BY_TAG, LOAD_BY_FRAME, LOAD_WHOLE,
-	    PLAY_DEFLAUT = 0u, PLAY_ONCE, SKIP_FRAME, };
+            PLAY_DEFLAUT = 0u, PLAY_ONCE, SKIP_FRAME, };
 
-    FrameRender* fr;	// XXX:
-    SoundMixer*  sm;	// XXX:
+    FrameRender* fr;    // XXX:
+    SoundMixer*  sm;    // XXX:
 
      Flash();
     ~Flash() { delete fr; }
 
     void cloz() {
-	bs.close();		fs.close();
-	for (std::vector<Tag*>::iterator it = ts.begin();
-		it != ts.end(); ++it) delete *it;
-	ts.clear();		fs.clear();
-	dl.clear();		di.clear();
-	fl.clear();
+        bs.close();             fs.close();
+        for (std::vector<Tag*>::iterator it = ts.begin();
+                it != ts.end(); ++it) delete *it;
+        ts.clear();             fs.clear();
+        dl.clear();             di.clear();
+        fl.clear();
     }
 
     void advf() {
-	assert(ControlTag::fl->pf < ControlTag::fl->size());
-	std::vector<ControlTag*>& fm =
-		(*ControlTag::fl)[ControlTag::fl->pf++];
-	for (std::vector<ControlTag*>::iterator it = fm.begin();
-		it != fm.end(); ++it) (*it)->exec();
+        assert(ControlTag::fl->pf < ControlTag::fl->size());
+        std::vector<ControlTag*>& fm =
+                (*ControlTag::fl)[ControlTag::fl->pf++];
+        for (std::vector<ControlTag*>::iterator it = fm.begin();
+                it != fm.end(); ++it) (*it)->exec();
     }
 
     void show() {
-	for (DispList::iterator it = dl.begin();
-		it != dl.end(); ++it) it->first->show(it->second);
+        for (DispList::iterator it = dl.begin();
+                it != dl.end(); ++it) it->first->show(it->second);
     }
 
     void dump(std::ostream& os) {
-	os  << "Frame #" << std::left << std::setw(4) << ControlTag::fl->pf
-	    << " with display list("  << std::setw(4)
-	    << dl.size() - 1 << " objects): \n";
-	for (DispList::iterator it = dl.begin();
-		++it != dl.end(); ) {
-	    os  << "  Object("  << it->first->code << ")\t#"
-		<< std::setw(4) << it->first->id;
-	    if (it->second) os  << " on depth #"
-		<< std::setw(4) << it->second->depth;
-	    os  << std::endl;
-	}   os  << std::right;
+        os  << "Frame #" << std::left << std::setw(4) << ControlTag::fl->pf
+            << " with display list("  << std::setw(4)
+            << dl.size() - 1 << " objects): \n";
+        for (DispList::iterator it = dl.begin();
+                ++it != dl.end(); ) {
+            os  << "  Object("  << it->first->code << ")\t#"
+                << std::setw(4) << it->first->id;
+            if (it->second) os  << " on depth #"
+                << std::setw(4) << it->second->depth;
+            os  << std::endl;
+        }   os  << std::right;
     }
 
     bool open(const char* fn);
@@ -435,9 +435,9 @@ private:
      FileHeader fh;
     MovieHeader mh;
 
-    EventHandler eh;	// XXX:
-    ActionScript as;	// XXX:
-    StackMachine SM;	// XXX:
+    EventHandler eh;    // XXX:
+    ActionScript as;    // XXX:
+    StackMachine SM;    // XXX:
 
     std::vector<Tag*> ts;
 

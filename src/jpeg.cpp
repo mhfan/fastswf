@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 
@@ -19,16 +19,16 @@
 // TODO: wrap into a class
 
 void js_init_ource(struct jpeg_decompress_struct* jpds)
-	{ jpds->src->bytes_in_buffer = 0; }
+        { jpds->src->bytes_in_buffer = 0; }
 
 boolean js_fill_input_buffer(struct jpeg_decompress_struct* jpds)
 {
     struct JPEGClient* jclt = (struct JPEGClient*)jpds->client_data;
     if (jclt->data) {
-	jpds->src->next_input_byte = (JOCTET*)jclt->data;
-	jpds->src->bytes_in_buffer =	      jclt->size;
-	jclt->data = NULL;
-    }	return TRUE;
+        jpds->src->next_input_byte = (JOCTET*)jclt->data;
+        jpds->src->bytes_in_buffer =          jclt->size;
+        jclt->data = NULL;
+    }   return TRUE;
 }
 
 void js_skip_input_data(struct jpeg_decompress_struct* jpds, long count)
@@ -39,7 +39,7 @@ void js_skip_input_data(struct jpeg_decompress_struct* jpds, long count)
 
 #if 0
 boolean js_resync_to_restart(struct jpeg_decompress_struct* jpds, int desired)
-	{ return jpeg_resync_to_restart(jpds, desired); }
+        { return jpeg_resync_to_restart(jpds, desired); }
 #endif
 
 void js_term_source(struct jpeg_decompress_struct* jpds) { }

@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 
@@ -32,16 +32,16 @@ static int render_cairo_init(struct swf_render* render, struct swf_rect* rect)
     cairo_format_t fmt;
     struct Framebuffer* fb;
     assert(render && rect);
-    fb = malloc(sizeof(*fb));		assert(fb);
+    fb = malloc(sizeof(*fb));           assert(fb);
     if (fbinit(fb, DEFAULT_FBDEV_PATH)) return 1;
 
     if (fb->xres < (w = TWIPS2PIXELS(rect->x1 - rect->x0))) {
-	render->sx = (fb->xres << 16) / w;
-	w = fb->xres;
+        render->sx = (fb->xres << 16) / w;
+        w = fb->xres;
     }
     if (fb->yres < (h = TWIPS2PIXELS(rect->y1 - rect->y0))) {
-	render->sy = (fb->yres << 16) / h;
-	h = fb->yres;
+        render->sy = (fb->yres << 16) / h;
+        h = fb->yres;
     }
     fbsetp(fb, 0, 0, w, h, FB_CENTER_MASK);
 
@@ -56,10 +56,10 @@ static int render_cairo_init(struct swf_render* render, struct swf_rect* rect)
 
     render_cairo.fb = fb;
     render_cairo.cr = cairo_create(render_cairo.sf =
-	    cairo_image_surface_create_for_data((unsigned char*)fb->pixels
-		    , fmt, fb->width, fb->height, fb->ppl * fb->bpp));
+            cairo_image_surface_create_for_data((unsigned char*)fb->pixels
+                    , fmt, fb->width, fb->height, fb->ppl * fb->bpp));
 
-    render->priv = &render_cairo;	return 0;
+    render->priv = &render_cairo;       return 0;
 }
 
 static void render_cairo_setbgc(struct swf_rgb* rgb)

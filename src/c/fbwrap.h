@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 #ifndef FB_H
@@ -27,8 +27,8 @@
 #include <sys/mman.h>
 #include <sys/ioctl.h>
 
-#define	DEFAULT_FBDEV_PATH		"/dev/fb0"
-#define	pixel_t				uint16_t
+#define DEFAULT_FBDEV_PATH              "/dev/fb0"
+#define pixel_t                         uint16_t
 
 struct Framebuffer {
     void* pixels;
@@ -40,13 +40,13 @@ struct Framebuffer {
     int xres, yres, bpl;
     unsigned char *scr, *base;
 
-#define	FB_SWAP_XY			(0x01 << 0)
-#define	FB_FLIP_WX			(0x01 << 1)
-#define	FB_FLIP_HY			(0x01 << 2)
-#define	FB_CENTERX			(0x01 << 3)
-#define	FB_CENTERY			(0x01 << 4)
-#define	FB_CENTER_MASK			(FB_CENTERX | FB_CENTERY)
-#define	FB_TRANSFORM_MASK		(FB_SWAP_XY | FB_FLIP_WX | FB_FLIP_HY)
+#define FB_SWAP_XY                      (0x01 << 0)
+#define FB_FLIP_WX                      (0x01 << 1)
+#define FB_FLIP_HY                      (0x01 << 2)
+#define FB_CENTERX                      (0x01 << 3)
+#define FB_CENTERY                      (0x01 << 4)
+#define FB_CENTER_MASK                  (FB_CENTERX | FB_CENTERY)
+#define FB_TRANSFORM_MASK               (FB_SWAP_XY | FB_FLIP_WX | FB_FLIP_HY)
     unsigned long flag;
 };
 

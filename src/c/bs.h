@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 #ifndef BS_H
@@ -20,18 +20,18 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#ifndef	SIGN_EXTEND
-#define	SIGN_EXTEND(val, nb) \
-	(val = (val & (1 << (nb - 1))) ? val | (-1 << nb) : val);
+#ifndef SIGN_EXTEND
+#define SIGN_EXTEND(val, nb) \
+        (val = (val & (1 << (nb - 1))) ? val | (-1 << nb) : val);
 #endif//SIGN_EXTEND
 
 struct bstream {
     void* strm;
     struct { uint8_t byte, bmsk; } curr;
     unsigned long flag;
-#define	BS_EOF				(0x01 << 7)
-#define	BS_MODE_READ			(0x01 << 0)
-#define	BS_MODE_WRITE			(0x01 << 1);
+#define BS_EOF                          (0x01 << 7)
+#define BS_MODE_READ                    (0x01 << 0)
+#define BS_MODE_WRITE                   (0x01 << 1);
 };
 
 struct bstream* bs_init(void* strm, unsigned m);

@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 
@@ -20,9 +20,9 @@
 struct bstream* bs_init(void* strm, unsigned m)
 {
     struct bstream* bs;
-    bs = malloc(sizeof(*bs));		assert(bs);
-    bs->strm = strm;			bs->flag = m;
-    bs_read_hook = fread;		return bs;
+    bs = malloc(sizeof(*bs));           assert(bs);
+    bs->strm = strm;                    bs->flag = m;
+    bs_read_hook = fread;               return bs;
 }
 
 int bs_close(struct bstream* bs)
@@ -130,24 +130,24 @@ uint32_t bs_read_unb(struct bstream* bs, unsigned nb)
     uint32_t bit, val=0x00;
     assert(bs && nb < 32);
     for (bit = (0x01 << (nb - 1)); bit; bit >>= 1) {
-	if (!bs->curr.bmsk) {
-	     bs->curr.bmsk = (0x01 << 7);
-	     bs_read_byte(bs);
-	}
-	if ( bs->curr.bmsk & bs->curr.byte) val |= bit;
-	     bs->curr.bmsk >>= 1;
-    }	return val;
+        if (!bs->curr.bmsk) {
+             bs->curr.bmsk = (0x01 << 7);
+             bs_read_byte(bs);
+        }
+        if ( bs->curr.bmsk & bs->curr.byte) val |= bit;
+             bs->curr.bmsk >>= 1;
+    }   return val;
 }
 
  int32_t bs_read_snb(struct bstream* bs, unsigned nb)
 {
-    int32_t val = bs_read_unb(bs, nb);	
+    int32_t val = bs_read_unb(bs, nb);  
     return SIGN_EXTEND(val, nb);
 }
 
 void    bs_align_byte(struct bstream* bs)
 {
-    assert(bs);				bs->curr.bmsk = 0x00;
+    assert(bs);                         bs->curr.bmsk = 0x00;
 }
 
 void     bs_read_byte(struct bstream* bs)

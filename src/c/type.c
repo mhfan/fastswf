@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 
@@ -36,14 +36,14 @@ void swf_read_matrix(struct bstream* bs, struct swf_matrix* mat)
     assert(bs && mat);
     bs_align_byte(bs);
     if ((has = bs_read_unb(bs, 1))) {
-	nbit = bs_read_unb(bs, SWF_MATRIX_SNBIT);
-	mat->sx = bs_read_snb(bs, nbit);
-	mat->sy = bs_read_snb(bs, nbit);
+        nbit = bs_read_unb(bs, SWF_MATRIX_SNBIT);
+        mat->sx = bs_read_snb(bs, nbit);
+        mat->sy = bs_read_snb(bs, nbit);
     } else mat->sx = mat->sy = SWF_MATRIX_DEFAULT_SCALE;
     if ((has = bs_read_unb(bs, 1))) {
-	nbit = bs_read_unb(bs, SWF_MATRIX_RNBIT);
-	mat->r0 = bs_read_snb(bs, nbit);
-	mat->r1 = bs_read_snb(bs, nbit);
+        nbit = bs_read_unb(bs, SWF_MATRIX_RNBIT);
+        mat->r0 = bs_read_snb(bs, nbit);
+        mat->r1 = bs_read_snb(bs, nbit);
     } else mat->r0 = mat->r1 = SWF_MATRIX_DEFAULT_ROTATE;
     nbit = bs_read_unb(bs, SWF_MATRIX_TNBIT);
     mat->tx = bs_read_snb(bs, nbit);
@@ -74,18 +74,18 @@ void swf_read_cxform(struct bstream* bs, struct swf_cxform* cxf)
     cxf->mr = bs_read_unb(bs, 1);
     nbit = bs_read_unb(bs, SWF_CXFORM_NBIT);
     if (cxf->mr) {
-	cxf->mr = bs_read_snb(bs, nbit);
-	cxf->mg = bs_read_snb(bs, nbit);
-	cxf->mb = bs_read_snb(bs, nbit);
-	cxf->ma = cxf->ma == SHRT_MAX ? bs_read_snb(bs, nbit)
-		: SWF_CXFORM_DEFAULT_MUL;
+        cxf->mr = bs_read_snb(bs, nbit);
+        cxf->mg = bs_read_snb(bs, nbit);
+        cxf->mb = bs_read_snb(bs, nbit);
+        cxf->ma = cxf->ma == SHRT_MAX ? bs_read_snb(bs, nbit)
+                : SWF_CXFORM_DEFAULT_MUL;
     } else cxf->mr = cxf->mg = cxf->mb = cxf->ma = SWF_CXFORM_DEFAULT_MUL;
     if (cxf->ar) {
-	cxf->ar = bs_read_snb(bs, nbit);
-	cxf->ag = bs_read_snb(bs, nbit);
-	cxf->ab = bs_read_snb(bs, nbit);
-	cxf->aa = cxf->aa == SHRT_MAX ? bs_read_snb(bs, nbit)
-		: SWF_CXFORM_DEFAULT_ADD;
+        cxf->ar = bs_read_snb(bs, nbit);
+        cxf->ag = bs_read_snb(bs, nbit);
+        cxf->ab = bs_read_snb(bs, nbit);
+        cxf->aa = cxf->aa == SHRT_MAX ? bs_read_snb(bs, nbit)
+                : SWF_CXFORM_DEFAULT_ADD;
     } else cxf->ar = cxf->ag = cxf->ab = cxf->aa = SWF_CXFORM_DEFAULT_ADD;
 }
 

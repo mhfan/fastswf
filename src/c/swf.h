@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 #ifndef SWF_H
@@ -118,14 +118,14 @@
 
 #include "type.h"
 
-struct __attribute__((packed)) swf_hdr {	// little-endian
-#define	SWF_MAGIC_SIGNATURE		'SWF'
-#define	SWF_COMPRESS_MAGIC_SIGNATURE	'SWC'	// after V6
+struct __attribute__((packed)) swf_hdr {        // little-endian
+#define SWF_MAGIC_SIGNATURE             'SWF'
+#define SWF_COMPRESS_MAGIC_SIGNATURE    'SWC'   // after V6
     union {
-	struct {
-	    uint32_t mgc : 24, ver : 8;	// 1~8
-	};  uint32_t __;	uint8_t _[4];
-    };	    uint32_t len;
+        struct {
+            uint32_t mgc : 24, ver : 8; // 1~8
+        };  uint32_t __;        uint8_t _[4];
+    };      uint32_t len;
     // the rest are compressed when 6 < version and magic == 'CWS'
 };
 

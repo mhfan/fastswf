@@ -10,7 +10,7 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 #ifndef FIXED_HPP
@@ -20,9 +20,9 @@
 
 #if 1
 
-typedef  int8_t	  f8_2_t;
-typedef  int8_t	  f8_4_t;
-typedef  int8_t	  f8_6_t;
+typedef  int8_t   f8_2_t;
+typedef  int8_t   f8_4_t;
+typedef  int8_t   f8_6_t;
 typedef  int16_t  f16_4_t;
 typedef  int16_t  f16_8_t;
 typedef  int32_t  f32_8_t;
@@ -33,9 +33,9 @@ typedef  int64_t  f64_16_t;
 typedef  int64_t  f64_32_t;
 typedef  int64_t  f64_48_t;
 
-typedef uint8_t	 uf8_2_t;
-typedef uint8_t	 uf8_4_t;
-typedef uint8_t	 uf8_6_t;
+typedef uint8_t  uf8_2_t;
+typedef uint8_t  uf8_4_t;
+typedef uint8_t  uf8_6_t;
 typedef uint16_t uf16_4_t;
 typedef uint16_t uf16_8_t;
 typedef uint32_t uf32_8_t;
@@ -59,19 +59,19 @@ inline double fixed2float(const T v) {
 
 template <typename T, uint8_t p>
 inline T fixed_mul(T a, T b) {
-    if (sizeof(T) < 2)	return (T)(( (int16_t)a * b) >> p);	else
-    if (sizeof(T) < 3)	return (T)(( (int32_t)a * b) >> p);	else
-			return (T)(( (int64_t)a * b) >> p);
+    if (sizeof(T) < 2)  return (T)(( (int16_t)a * b) >> p);     else
+    if (sizeof(T) < 3)  return (T)(( (int32_t)a * b) >> p);     else
+                        return (T)(( (int64_t)a * b) >> p);
 }
 template <typename T, uint8_t p>
 inline T fixed_div(T a, T b) {
-    if (sizeof(T) < 2)	return (T)((((int16_t)a) << p) / b);	else
-    if (sizeof(T) < 3)	return (T)((((int32_t)a) << p) / b);	else
-			return (T)((((int64_t)a) << p) / b);
+    if (sizeof(T) < 2)  return (T)((((int16_t)a) << p) / b);    else
+    if (sizeof(T) < 3)  return (T)((((int32_t)a) << p) / b);    else
+                        return (T)((((int64_t)a) << p) / b);
 }
 
-template <typename T, uint8_t p>	// XXX: uint8_t -> int ?
-struct FixedPointType {		//assert(v <= BITSOF(T));
+template <typename T, uint8_t p>        // XXX: uint8_t -> int ?
+struct FixedPointType {         //assert(v <= BITSOF(T));
     FixedPointType() /*: fixed(0ULL)*/ { }
     FixedPointType(const FixedPointType& v) : fixed(v.fixed) { }
 
@@ -91,35 +91,35 @@ struct FixedPointType {		//assert(v <= BITSOF(T));
     FixedPointType(double v) : fixed(float2fixed<T, p>(v)) { }
 
     FixedPointType& operator+=(const FixedPointType& a) {
-	fixed += a.fixed;	return *this;
+        fixed += a.fixed;       return *this;
     }
     FixedPointType& operator-=(const FixedPointType& a) {
-	fixed -= a.fixed;	return *this;
+        fixed -= a.fixed;       return *this;
     }
     FixedPointType& operator*=(const FixedPointType& a) {
-	fixed = fixed_mul<T, p>(fixed, a.fixed);	return *this;
+        fixed = fixed_mul<T, p>(fixed, a.fixed);        return *this;
     }
     FixedPointType& operator/=(const FixedPointType& a) {
-	fixed = fixed_div<T, p>(fixed, a.fixed);	return *this;
+        fixed = fixed_div<T, p>(fixed, a.fixed);        return *this;
     }
 
-    FixedPointType& operator*=(const T a) { fixed *= a;	return *this; }
-    FixedPointType& operator/=(const T a) { fixed /= a;	return *this; }
+    FixedPointType& operator*=(const T a) { fixed *= a; return *this; }
+    FixedPointType& operator/=(const T a) { fixed /= a; return *this; }
 
     FixedPointType  operator- () const {
-	FixedPointType x;	 x.fixed  =  -fixed;	return x;
+        FixedPointType x;        x.fixed  =  -fixed;    return x;
     }
     FixedPointType  operator+ (const FixedPointType& a) const {
-	FixedPointType x(*this); x += a;	return x;
+        FixedPointType x(*this); x += a;        return x;
     }
     FixedPointType  operator- (const FixedPointType& a) const {
-	FixedPointType x(*this); x -= a;	return x;
+        FixedPointType x(*this); x -= a;        return x;
     }
     FixedPointType  operator* (const FixedPointType& a) const {
-	FixedPointType x(*this); x *= a;	return x;
+        FixedPointType x(*this); x *= a;        return x;
     }
     FixedPointType  operator/ (const FixedPointType& a) const {
-	FixedPointType x(*this); x /= a;	return x;
+        FixedPointType x(*this); x /= a;        return x;
     }
 
     bool operator< (const FixedPointType& a) const { return fixed <  a.fixed; }
@@ -134,65 +134,65 @@ private:
 };
 
 
-typedef	FixedPointType<  int8_t,  2>  f8_2_t;
-typedef	FixedPointType<  int8_t,  4>  f8_4_t;
-typedef	FixedPointType<  int8_t,  6>  f8_6_t;
-typedef	FixedPointType< int16_t,  4>  f16_4_t;
-typedef	FixedPointType< int16_t,  8>  f16_8_t;
-typedef	FixedPointType< int32_t,  8>  f32_8_t;
-typedef	FixedPointType< int16_t, 12>  f16_12_t;
-typedef	FixedPointType< int32_t, 16>  f32_16_t;
-typedef	FixedPointType< int32_t, 24>  f32_24_t;
-typedef	FixedPointType< int64_t, 16>  f64_16_t;
-typedef	FixedPointType< int64_t, 32>  f64_32_t;
-typedef	FixedPointType< int64_t, 48>  f64_48_t;
+typedef FixedPointType<  int8_t,  2>  f8_2_t;
+typedef FixedPointType<  int8_t,  4>  f8_4_t;
+typedef FixedPointType<  int8_t,  6>  f8_6_t;
+typedef FixedPointType< int16_t,  4>  f16_4_t;
+typedef FixedPointType< int16_t,  8>  f16_8_t;
+typedef FixedPointType< int32_t,  8>  f32_8_t;
+typedef FixedPointType< int16_t, 12>  f16_12_t;
+typedef FixedPointType< int32_t, 16>  f32_16_t;
+typedef FixedPointType< int32_t, 24>  f32_24_t;
+typedef FixedPointType< int64_t, 16>  f64_16_t;
+typedef FixedPointType< int64_t, 32>  f64_32_t;
+typedef FixedPointType< int64_t, 48>  f64_48_t;
 
-typedef	FixedPointType< uint8_t,  2> uf8_2_t;
-typedef	FixedPointType< uint8_t,  4> uf8_4_t;
-typedef	FixedPointType< uint8_t,  6> uf8_6_t;
-typedef	FixedPointType<uint16_t,  4> uf16_4_t;
-typedef	FixedPointType<uint16_t,  8> uf16_8_t;
-typedef	FixedPointType<uint32_t,  8> uf32_8_t;
-typedef	FixedPointType<uint16_t, 12> uf16_12_t;
-typedef	FixedPointType<uint32_t, 16> uf32_16_t;
-typedef	FixedPointType<uint32_t, 24> uf32_24_t;
-typedef	FixedPointType<uint64_t, 16> uf64_16_t;
-typedef	FixedPointType<uint64_t, 32> uf64_32_t;
-typedef	FixedPointType<uint64_t, 48> uf64_48_t;
+typedef FixedPointType< uint8_t,  2> uf8_2_t;
+typedef FixedPointType< uint8_t,  4> uf8_4_t;
+typedef FixedPointType< uint8_t,  6> uf8_6_t;
+typedef FixedPointType<uint16_t,  4> uf16_4_t;
+typedef FixedPointType<uint16_t,  8> uf16_8_t;
+typedef FixedPointType<uint32_t,  8> uf32_8_t;
+typedef FixedPointType<uint16_t, 12> uf16_12_t;
+typedef FixedPointType<uint32_t, 16> uf32_16_t;
+typedef FixedPointType<uint32_t, 24> uf32_24_t;
+typedef FixedPointType<uint64_t, 16> uf64_16_t;
+typedef FixedPointType<uint64_t, 32> uf64_32_t;
+typedef FixedPointType<uint64_t, 48> uf64_48_t;
 
 
 template <typename T, uint8_t p>
 inline FixedPointType<T, p> operator+ (const T a,
-	const FixedPointType<T, p>& b) { return  b + a; }
+        const FixedPointType<T, p>& b) { return  b + a; }
 template <typename T, uint8_t p>
 inline FixedPointType<T, p> operator- (const T a,
-	const FixedPointType<T, p>& b) { return -b + a; }
+        const FixedPointType<T, p>& b) { return -b + a; }
 template <typename T, uint8_t p>
 inline FixedPointType<T, p> operator* (const T a,
-	const FixedPointType<T, p>& b) { return  b * a; }
+        const FixedPointType<T, p>& b) { return  b * a; }
 template <typename T, uint8_t p>
 inline FixedPointType<T, p> operator/ (const T a,
-	const FixedPointType<T, p>& b) {
-    FixedPointType<T, p> r(a);		 return r /= b;
+        const FixedPointType<T, p>& b) {
+    FixedPointType<T, p> r(a);           return r /= b;
 }
 
 template <typename T, uint8_t p>
 inline FixedPointType<T, p> sin(const FixedPointType<T, p>& a) {
     FixedPointType<T, p> r;
-    r.fixed = fixed_sincos<T, p, false>;	return r;
+    r.fixed = fixed_sincos<T, p, false>;        return r;
 }
 template <typename T, uint8_t p>
 inline FixedPointType<T, p> cos(const FixedPointType<T, p>& a) {
     FixedPointType<T, p> r;
-    r.fixed = fixed_sincos<T, p, true>;		return r;
+    r.fixed = fixed_sincos<T, p, true>;         return r;
 }
 
 template <typename T, uint8_t p>
 inline FixedPointType<T, p> tan(const FixedPointType<T, p>& a) {
     T s = fixed_sincos(T, p, false), c = fixed_sincos(T, p, true);
     if (!c) return (0 < s) ? std::numeric_limits<T>::max() :
-			     std::numeric_limits<T>::min(); else
-	    return (((s << (p - 1)) / c) << 1);
+                             std::numeric_limits<T>::min(); else
+            return (((s << (p - 1)) / c) << 1);
     //fixed_div<T, p>(s, c);
 }
 
@@ -234,11 +234,11 @@ int main(int argc, char* argv[])
     uint16_t i;
 
     for (i = 0; i < (0x01 << LOG2_SIN); ++i) {
-	uint32_t v = floor(sin(M_PI * i /
-		(0x01 << (LOG2_SIN + 1))) * (0x01 << LOG2_FIXED) + 0.5);
-	if (!(i % 8)) fprintf(stdout, "\n    ");
-	fprintf(stdout, " 0x%04x,", UINT16_MAX < v ? UINT16_MAX : v);
-    }	fprintf(stdout, "\n");
+        uint32_t v = floor(sin(M_PI * i /
+                (0x01 << (LOG2_SIN + 1))) * (0x01 << LOG2_FIXED) + 0.5);
+        if (!(i % 8)) fprintf(stdout, "\n    ");
+        fprintf(stdout, " 0x%04x,", UINT16_MAX < v ? UINT16_MAX : v);
+    }   fprintf(stdout, "\n");
 
     return 0;
 }
@@ -385,7 +385,7 @@ inline T fixed_sincos(T a)
     a = fixed_mul<T, p>(a, FIXED_R2PI) >> (p - 2 - LOG2_SIN);
     if (cos) a += ANGLE_90;
     T v = sin16_table[(a & ANGLE_90) ?
-	    ANGLE_90 - 1 - (a & (ANGLE_90 - 1)) : (a & (ANGLE_90 - 1))];
+            ANGLE_90 - 1 - (a & (ANGLE_90 - 1)) : (a & (ANGLE_90 - 1))];
     if (LOG2_FIXED < p) v << (p - LOG2_FIXED); else v >> (LOG2_FIXED - p);
     //v += fixmul<T, p>(v, FixedPointType<T, p>one() - 1);
     //v  = fixmul<T, p>(v, FixedPointType<T, p>one());

@@ -10,13 +10,13 @@
  *   All rights reserved.                                       *
  *                                                              *
  * This file is free software;                                  *
- *   you are free to modify and/or redistribute it   	        *
+ *   you are free to modify and/or redistribute it              *
  *   under the terms of the GNU General Public Licence (GPL).   *
  ****************************************************************/
 #ifndef JPEG_HPP
 #define JPEG_HPP
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 extern "C" {
 #endif
 
@@ -24,7 +24,7 @@ extern "C" {
 #include <setjmp.h>
 #include <jpeglib.h>
 
-#ifdef	__cplusplus
+#ifdef  __cplusplus
 }
 #endif
 
